@@ -1,6 +1,7 @@
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.1
+    image: confluentinc/cp-zookeeper:7.7.0
+    container_name: rtm-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -8,24 +9,37 @@ services:
       - "2181:2181"
 
   kafka:
-    image: confluentinc/cp-kafka:7.6.1
+    image: confluentinc/cp-kafka:7.7.0
+    container_name: rtm-kafka
     depends_on:
       - zookeeper
+    ports:
+      - "9092:9092"      # inside Docker network
+      - "29092:29092"    # reachable from your host
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_INTERNAL://kafka:29092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: rtm-kafka-ui
+    depends_on:
+      - kafka
     ports:
-      - "9092:29092"
-    volumes:
-      - kafka-data:/var/lib/kafka/data
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
 
   postgres:
     image: postgres:16
+    container_name: rtm-postgres
     environment:
       POSTGRES_USER: rtm
       POSTGRES_PASSWORD: rtm
@@ -33,53 +47,48 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-
-  kafdrop:
-    image: obsidiandynamics/kafdrop
-    depends_on:
-      - kafka
-    ports:
-      - "9000:9000"
-    environment:
-      KAFKA_BROKERCONNECT: "kafka:29092"
-
-  grafana:
-    image: grafana/grafana:10.4.2
-    ports:
-      - "3000:3000"
-    depends_on:
-      - postgres
+      - rtm-postgres-data:/var/lib/postgresql/data
 
   producer:
     build: ./producer
+    container_name: rtm-producer
     depends_on:
       - kafka
     environment:
-      KAFKA_BOOTSTRAP: "kafka:29092"
-      KAFKA_TOPIC: "metrics"
+      PYTHONUNBUFFERED: 1
 
   consumer:
     build: ./consumer
+    container_name: rtm-consumer
     depends_on:
       - kafka
       - postgres
     environment:
-      KAFKA_BOOTSTRAP: "kafka:29092"
-      KAFKA_TOPIC: "metrics"
-      PG_DSN: "dbname=rtm user=rtm password=rtm host=postgres port=5432"
+      PYTHONUNBUFFERED: 1
 
-  flink-job:
-    build: ./flink-job
+  grafana:
+    image: grafana/grafana:10.4.1
+    container_name: rtm-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - postgres
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+  anomaly-detector:
+    build: ./anomaly-detector
+    container_name: rtm-anomaly-detector
     depends_on:
       - kafka
-      - postgres
     environment:
-      KAFKA_BOOTSTRAP: "kafka:29092"
-      PG_URL: "jdbc:postgresql://postgres:5432/rtm"
-      PG_USER: "rtm"
-      PG_PASS: "rtm"
+      PYTHONUNBUFFERED: 1
+
+
 
 volumes:
-  pgdata:
-  kafka-data:
+  rtm-postgres-data:
+  grafana-data:

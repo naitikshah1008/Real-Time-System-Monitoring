@@ -1,26 +1,81 @@
-# Virtual environments
-venv/
-.venv/
+# ===========================================
+# OS Files
+# ===========================================
+.DS_Store
+Thumbs.db
 
-# Python cache
+# ===========================================
+# Python
+# ===========================================
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.pdb
 *.log
+.pytest_cache/
+*.egg-info/
+.eggs/
+dist/
+build/
 
-# macOS files
-.DS_Store
+# Even though we're using Docker, ignore local venvs
+venv/
+.venv/
 
-# VS Code / IDE stuff
-.vscode/
-.idea/
-
-# Environment variables
-.env
-
-# Docker volumes or temp files
+# ===========================================
+# Docker
+# ===========================================
+# Docker build artifacts
+*.tar
 *.pid
-*.db
-*.sqlite
-/tmp/
+
+# Local docker-compose override files
+docker-compose.override.yml
+
+# ===========================================
+# Docker Volumes (do NOT track DB or Grafana data)
+# ===========================================
+# Postgres data directory (if ever created locally)
+postgres-data/
+rtm-postgres-data/
+
+# Grafana data (local mounts)
+grafana-data/
+
+# Any other named volumes
+*/volumes/
+
+# ===========================================
+# Logs
+# ===========================================
+logs/
+*.log
+log.txt
+
+# ===========================================
+# IDE / Editor Files
+# ===========================================
+# VS Code
+.vscode/
+.vscode-test/
+.history/
+
+# JetBrains
+.idea/
+*.iml
+
+# ===========================================
+# Environment / Secrets (none in your repo—but safe)
+# ===========================================
+.env
+.env.local
+*.env
+
+# ===========================================
+# Node (if you add UI later)
+# ===========================================
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
