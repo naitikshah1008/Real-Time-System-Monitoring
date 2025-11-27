@@ -78,6 +78,9 @@ services:
       - postgres
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/provisioning:/etc/grafana/provisioning
+
 
   anomaly-detector:
     build: ./anomaly-detector
