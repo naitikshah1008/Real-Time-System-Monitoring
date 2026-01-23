@@ -1,4 +1,4 @@
-# 🧠 Real-Time System Monitoring with AI Prediction
+# 🧠 Real-Time System Monitoring
 
 A full-stack data engineering and AI-driven observability project that monitors live system metrics (CPU, memory, etc.), streams them through **Apache Kafka**, processes them in **Apache Flink (PyFlink)** for anomaly detection, and stores results in **TimescaleDB (PostgreSQL)** for real-time visualization in **Grafana** dashboards.
 
