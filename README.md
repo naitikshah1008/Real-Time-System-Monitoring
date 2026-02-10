@@ -181,8 +181,6 @@ Step 5. Visualize in Grafana
 
 Navigate to: http://localhost:3000
 
-Default login: admin / Naitik@1008
-
 Add PostgreSQL data source (host: postgres:5432)
 
 Create dashboards using SQL panels:
