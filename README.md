@@ -188,6 +188,7 @@ Create dashboards using SQL panels:
 - Memory Panel  
 - Anomaly Score Panel
 
+---
 
 📊 Example Grafana Queries
 
@@ -219,12 +220,16 @@ WHERE score >= 3
 ORDER BY ts;
 ```
 
+---
+
 🔔 Future Enhancements
 ✅ AI Forecasting (ARIMA / LSTM via River / PyTorch)
 ✅ Real-time Alerting via Slack / PagerDuty
 ✅ Auto-scaling metrics ingestion using Kubernetes
 ✅ Integration with Prometheus / OpenTelemetry
 ✅ Web dashboard for anomaly reports
+
+---
 
 🧑‍💻 Author
 Naitik Shah
