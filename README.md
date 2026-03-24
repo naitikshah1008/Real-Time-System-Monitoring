@@ -142,7 +142,9 @@ docker exec -it rtm-ai-kafka-1 \
   kafka-topics --bootstrap-server kafka:29092 --create --topic metrics --partitions 1 --replication-factor 1
 ```
 
-🧠 Running the Pipeline
+---
+
+## 🧠 Running the Pipeline
 
 Step 1. Start the Producer
 
@@ -222,37 +224,38 @@ ORDER BY ts;
 
 ---
 
-🔔 Future Enhancements
-✅ AI Forecasting (ARIMA / LSTM via River / PyTorch)
-✅ Real-time Alerting via Slack / PagerDuty
-✅ Auto-scaling metrics ingestion using Kubernetes
-✅ Integration with Prometheus / OpenTelemetry
-✅ Web dashboard for anomaly reports
+## 🔔 Future Enhancements
+- ✅ AI Forecasting (ARIMA / LSTM via River / PyTorch)
+- ✅ Real-time Alerting via Slack / PagerDuty
+- ✅ Auto-scaling metrics ingestion using Kubernetes
+- ✅ Integration with Prometheus / OpenTelemetry
+- ✅ Web dashboard for anomaly reports
 
 ---
 
-🧑‍💻 Author
-Naitik Shah
-Master of Engineering in Computer Science
-Oregon State University
-🔗 [LinkedIn](https://www.linkedin.com/in/naitik1008)  
-🔗 [GitHub](https://github.com/naitikshah1008)
+## 🧑‍💻 Author
+- Naitik Shah
+- Master of Engineering in Computer Science
+- Oregon State University
+- 🔗 [LinkedIn](https://www.linkedin.com/in/naitik1008)  
+- 🔗 [GitHub](https://github.com/naitikshah1008)
 
 ---
 
 ## 🪪 License
 
-This project is licensed under the MIT License — feel free to use, modify, and extend.
+This project is licensed under the MIT License.
 
+---
 
-⭐ Acknowledgments
-Apache Flink & Kafka documentation
+## ⭐ Acknowledgments
+- Apache Flink & Kafka documentation
 
-TimescaleDB community
+- TimescaleDB community
 
-Grafana Labs tutorials
+- Grafana Labs tutorials
 
-Confluent Schema Registry samples
+- Confluent Schema Registry samples
 
-“Building reliable systems means understanding the data flowing through them.
+- “Building reliable systems means understanding the data flowing through them.
 This project bridges the gap between monitoring, prediction, and intelligent automation.”
