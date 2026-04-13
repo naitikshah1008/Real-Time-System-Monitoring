@@ -1,10 +1,10 @@
-# 🧠 Real-Time System Monitoring
+# Real-Time System Monitoring
 
 A full-stack data engineering and AI-driven observability project that monitors live system metrics (CPU, memory, etc.), streams them through **Apache Kafka**, processes them in **Apache Flink (PyFlink)** for anomaly detection, and stores results in **TimescaleDB (PostgreSQL)** for real-time visualization in **Grafana** dashboards.
 
 ---
 
-## 🚀 Overview
+## Overview
 
 Modern distributed systems generate massive amounts of telemetry data every second.  
 This project builds a **real-time monitoring pipeline** that can:
@@ -18,7 +18,7 @@ It demonstrates hands-on skills in **streaming data pipelines**, **distributed s
 
 ---
 
-## 🧩 Tech Stack
+## Tech Stack
 
 | Layer | Technology | Purpose |
 |-------|-------------|----------|
@@ -33,7 +33,7 @@ It demonstrates hands-on skills in **streaming data pipelines**, **distributed s
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```
 ┌─────────────┐ ┌────────────┐ ┌───────────────┐ ┌───────────────┐ ┌──────────────┐
@@ -52,7 +52,7 @@ It demonstrates hands-on skills in **streaming data pipelines**, **distributed s
 
 ---
 
-## 🧮 AI & Anomaly Detection
+## AI & Anomaly Detection
 
 **EWMA (Exponentially Weighted Moving Average) Model**
 
@@ -70,7 +70,7 @@ Future extensions: integrate ARIMA / LSTM for predictive forecasting.
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 Real-Time-System-Monitoring-with-AI-Prediction/
 │
@@ -86,7 +86,7 @@ Real-Time-System-Monitoring-with-AI-Prediction/
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ```bash
 docker compose up -d
@@ -97,7 +97,7 @@ python flink_job.py
 
 ---
 
-## ⚙️ Setup & Installation
+## Setup & Installation
 
 1️⃣ Prerequisites
 Install the following tools:
@@ -144,7 +144,7 @@ docker exec -it rtm-ai-kafka-1 \
 
 ---
 
-## 🧠 Running the Pipeline
+## Running the Pipeline
 
 Step 1. Start the Producer
 
@@ -192,7 +192,7 @@ Create dashboards using SQL panels:
 
 ---
 
-📊 Example Grafana Queries
+ Example Grafana Queries
 
 CPU Panel
 
@@ -224,7 +224,7 @@ ORDER BY ts;
 
 ---
 
-## 🔔 Future Enhancements
+## Future Enhancements
 - ✅ AI Forecasting (ARIMA / LSTM via River / PyTorch)
 - ✅ Real-time Alerting via Slack / PagerDuty
 - ✅ Auto-scaling metrics ingestion using Kubernetes
@@ -233,7 +233,7 @@ ORDER BY ts;
 
 ---
 
-## 🧑‍💻 Author
+## Author
 - Naitik Shah
 - Master of Engineering in Computer Science
 - Oregon State University
@@ -242,7 +242,7 @@ ORDER BY ts;
 
 ---
 
-## 🪪 License
+## License
 
 This project is licensed under the MIT License.
 
