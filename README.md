@@ -157,12 +157,3 @@ Restart from a clean local database and Grafana volume:
 docker compose down -v
 docker compose up --build
 ```
-
-## Recommended Future Improvements
-
-- Move database schema creation into an explicit migration or init script.
-- Add unit tests for anomaly detection and schema compatibility.
-- Add `.dockerignore` files for smaller build contexts.
-- Pin Python dependency versions for reproducible builds.
-- Add memory anomaly detection if memory anomalies should be first-class events.
-- Switch to TimescaleDB only if time-series hypertables are actually required.
