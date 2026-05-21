@@ -1,11 +1,12 @@
 import json
+import os
 import time
 import math
 from kafka import KafkaConsumer, KafkaProducer
 
-KAFKA_BROKER = "kafka:9092"
-INPUT_TOPIC = "metrics_raw"
-OUTPUT_TOPIC = "metrics_anomalies"
+KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
+INPUT_TOPIC = os.getenv("METRICS_RAW_TOPIC", "metrics_raw")
+OUTPUT_TOPIC = os.getenv("METRICS_ANOMALY_TOPIC", "metrics_anomalies")
 
 ALPHA = 0.2
 state = {}   # host -> (ewma, ewmsq)
@@ -13,6 +14,7 @@ state = {}   # host -> (ewma, ewmsq)
 def detect_anomaly(event):
     host = event["host"]
     value = float(event["cpu"])
+    mem = event.get("mem")
     ts = event["ts"]
 
     prev = state.get(host)
@@ -29,14 +31,17 @@ def detect_anomaly(event):
 
     var_est = max(ewmsq_new - ewma_new * ewma_new, 0.0)
     std = math.sqrt(var_est)
+    score = abs(value - ewma_new) / std if std > 0 else 0.0
 
-    if std > 0 and abs(value - ewma_new) > 3 * std:
+    if score >= 3:
         return {
             "host": host,
             "cpu": value,
+            "mem": mem,
             "ts": ts,
             "ewma": ewma_new,
             "std": std,
+            "score": score,
             "type": "ANOMALY"
         }
 
@@ -52,7 +57,8 @@ def create_consumer():
                 value_deserializer=lambda m: json.loads(m.decode("utf-8")),
                 auto_offset_reset="earliest",
                 enable_auto_commit=True,
-                group_id="rtm-anomaly-group"
+                group_id="rtm-anomaly-group",
+                api_version_auto_timeout_ms=30000,
             )
             print("Connected to Kafka (consumer)")
             return consumer
@@ -66,7 +72,10 @@ def create_producer():
         try:
             producer = KafkaProducer(
                 bootstrap_servers=KAFKA_BROKER,
-                value_serializer=lambda v: json.dumps(v).encode("utf-8")
+                value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+                retries=5,
+                request_timeout_ms=30000,
+                api_version_auto_timeout_ms=30000,
             )
             print("Connected to Kafka (producer)")
             return producer
@@ -87,7 +96,15 @@ def main():
 
         if anomaly:
             print("ANOMALY:", anomaly)
-            producer.send(OUTPUT_TOPIC, anomaly)
+            try:
+                producer.send(OUTPUT_TOPIC, anomaly).get(timeout=10)
+            except Exception as e:
+                print("Failed to publish anomaly, reconnecting...", str(e))
+                try:
+                    producer.close()
+                except Exception:
+                    pass
+                producer = create_producer()
 
 
 if __name__ == "__main__":

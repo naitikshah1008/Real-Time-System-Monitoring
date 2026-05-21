@@ -23,7 +23,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "af5320w2llse8b"
+        "uid": "rtm-postgres"
       },
       "fieldConfig": {
         "defaults": {
@@ -51,20 +51,20 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT ts * 1000 AS time, cpu, host FROM metrics_raw ORDER BY ts ASC",
+          "rawSql": "SELECT to_timestamp(ts) AS time, host, cpu FROM metrics_raw WHERE $__timeFilter(to_timestamp(ts)) ORDER BY ts ASC",
           "refId": "A",
           "select": [ [ { "params": ["cpu"], "type": "column" } ] ],
           "table": "metrics_raw",
           "timeColumn": "ts"
         }
       ],
-      "title": "CPU Usage (EWMA Raw Data)",
+      "title": "CPU Usage (%)",
       "type": "timeseries"
     },
     {
       "datasource": {
         "type": "postgres",
-        "uid": "af5320w2llse8b"
+        "uid": "rtm-postgres"
       },
       "fieldConfig": {
         "defaults": {
@@ -88,7 +88,7 @@
         {
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT ts * 1000 AS time, mem, host FROM metrics_raw ORDER BY ts ASC",
+          "rawSql": "SELECT to_timestamp(ts) AS time, host, mem FROM metrics_raw WHERE $__timeFilter(to_timestamp(ts)) ORDER BY ts ASC",
           "refId": "A"
         }
       ],
@@ -98,7 +98,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "af5320w2llse8b"
+        "uid": "rtm-postgres"
       },
       "fieldConfig": {
         "defaults": {
@@ -121,11 +121,11 @@
         {
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT ts * 1000 AS time, cpu, host FROM metrics_anomalies ORDER BY ts ASC",
+          "rawSql": "SELECT to_timestamp(ts) AS time, host, score FROM metrics_anomalies WHERE $__timeFilter(to_timestamp(ts)) ORDER BY ts ASC",
           "refId": "A"
         }
       ],
-      "title": "CPU Anomalies (3σ Events)",
+      "title": "CPU Anomaly Score (3 Sigma Events)",
       "type": "timeseries"
     }
   ],
@@ -138,7 +138,7 @@
       {
         "datasource": {
           "type": "postgres",
-          "uid": "af5320w2llse8b"
+          "uid": "rtm-postgres"
         },
         "label": "Host",
         "name": "host",
