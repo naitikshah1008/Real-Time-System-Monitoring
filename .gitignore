@@ -53,6 +53,9 @@ logs/
 *.log
 log.txt
 
+# Local project analysis/status notes
+PROJECT_STATUS.md
+
 # ===========================================
 # IDE / Editor Files
 # ===========================================
