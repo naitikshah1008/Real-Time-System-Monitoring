@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IncidentCommand",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "incident_id",
+    "type",
+    "host",
+    "duration_seconds",
+    "intensity",
+    "created_at"
+  ],
+  "properties": {
+    "incident_id": { "type": "string", "minLength": 1 },
+    "type": {
+      "type": "string",
+      "enum": ["cpu_spike", "memory_leak", "disk_pressure", "network_burst"]
+    },
+    "host": { "type": "string", "minLength": 1 },
+    "duration_seconds": { "type": "integer", "minimum": 5, "maximum": 3600 },
+    "intensity": { "type": "number", "minimum": 0.1, "maximum": 1.0 },
+    "created_at": { "type": "integer", "minimum": 0 }
+  }
+}
