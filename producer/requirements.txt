@@ -1,2 +1,2 @@
-kafka-python
-psutil
+kafka-python==2.3.1
+psutil==7.2.2
