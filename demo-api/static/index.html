@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RTM-AI Control Panel</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #101315;
+        color: #edf2f4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #101315;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 24px;
+        border-bottom: 1px solid #2c3438;
+        background: #151a1d;
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      h2 {
+        font-size: 15px;
+      }
+
+      main {
+        width: min(1180px, 100%);
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 32px;
+        padding: 6px 10px;
+        border: 1px solid #354044;
+        border-radius: 6px;
+        background: #1a2024;
+        font-size: 13px;
+      }
+
+      .status-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: #f0b429;
+      }
+
+      .status.ok .status-dot {
+        background: #2fb344;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 330px 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+
+      section,
+      .panel {
+        border: 1px solid #2c3438;
+        border-radius: 8px;
+        background: #151a1d;
+      }
+
+      section {
+        padding: 18px;
+      }
+
+      .controls {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      button {
+        min-height: 42px;
+        border: 1px solid #3a474d;
+        border-radius: 6px;
+        color: #edf2f4;
+        background: #22313a;
+        font: inherit;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #2d414d;
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      .tables {
+        display: grid;
+        gap: 20px;
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-bottom: 1px solid #2c3438;
+      }
+
+      .table-wrap {
+        overflow: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #263034;
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      th {
+        color: #aab7bd;
+        font-weight: 600;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #263238;
+        color: #cfe3ea;
+      }
+
+      .critical {
+        background: #5b1f2a;
+        color: #ffd6dd;
+      }
+
+      .warning {
+        background: #604516;
+        color: #ffe1a3;
+      }
+
+      @media (max-width: 860px) {
+        header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        main {
+          padding: 16px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>RTM-AI Control Panel</h1>
+      <div class="status" id="health"><span class="status-dot"></span><span>Checking</span></div>
+    </header>
+    <main>
+      <div class="grid">
+        <section>
+          <h2>Incident Simulator</h2>
+          <div class="controls">
+            <button data-type="cpu_spike">CPU Spike</button>
+            <button data-type="memory_leak">Memory Leak</button>
+            <button data-type="disk_pressure">Disk Pressure</button>
+            <button data-type="network_burst">Network Burst</button>
+          </div>
+        </section>
+        <div class="tables">
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Latest Metrics</h2>
+              <a href="http://localhost:3000" target="_blank" rel="noreferrer">Grafana</a>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Host</th>
+                    <th>Scenario</th>
+                    <th>CPU</th>
+                    <th>Mem</th>
+                    <th>Disk</th>
+                    <th>Net In</th>
+                    <th>Net Out</th>
+                  </tr>
+                </thead>
+                <tbody id="metrics"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Latest Anomalies</h2>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Host</th>
+                    <th>Metric</th>
+                    <th>Score</th>
+                    <th>Severity</th>
+                    <th>Scenario</th>
+                  </tr>
+                </thead>
+                <tbody id="anomalies"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script>
+      const health = document.querySelector("#health");
+      const metricsBody = document.querySelector("#metrics");
+      const anomaliesBody = document.querySelector("#anomalies");
+
+      function pct(value) {
+        return `${Number(value || 0).toFixed(1)}%`;
+      }
+
+      function number(value) {
+        return Number(value || 0).toFixed(1);
+      }
+
+      async function loadHealth() {
+        const data = await fetch("/api/health").then((response) => response.json());
+        health.classList.toggle("ok", data.status === "ok");
+        health.querySelector("span:last-child").textContent = data.status.toUpperCase();
+      }
+
+      async function loadMetrics() {
+        const rows = await fetch("/api/metrics/latest?limit=12").then((response) => response.json());
+        metricsBody.innerHTML = rows
+          .map(
+            (row) => `<tr>
+              <td>${row.host}</td>
+              <td><span class="badge">${row.scenario}</span></td>
+              <td>${pct(row.cpu)}</td>
+              <td>${pct(row.mem)}</td>
+              <td>${pct(row.disk)}</td>
+              <td>${number(row.net_in)} KB/s</td>
+              <td>${number(row.net_out)} KB/s</td>
+            </tr>`,
+          )
+          .join("");
+      }
+
+      async function loadAnomalies() {
+        const rows = await fetch("/api/anomalies/latest?limit=12").then((response) => response.json());
+        anomaliesBody.innerHTML = rows
+          .map(
+            (row) => `<tr>
+              <td>${row.host}</td>
+              <td>${row.metric}</td>
+              <td>${number(row.score)}</td>
+              <td><span class="badge ${row.severity}">${row.severity}</span></td>
+              <td>${row.scenario}</td>
+            </tr>`,
+          )
+          .join("");
+      }
+
+      async function refresh() {
+        await Promise.allSettled([loadHealth(), loadMetrics(), loadAnomalies()]);
+      }
+
+      document.querySelectorAll("button[data-type]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          await fetch("/api/incidents", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: button.dataset.type,
+              host: "*",
+              duration_seconds: 120,
+              intensity: 1.0,
+            }),
+          });
+          button.disabled = false;
+          refresh();
+        });
+      });
+
+      refresh();
+      setInterval(refresh, 5000);
+    </script>
+  </body>
+</html>
