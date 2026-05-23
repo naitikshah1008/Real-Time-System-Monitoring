@@ -1,50 +1,31 @@
-# Real-Time System Monitoring with AI Prediction
+# RTM-AI Advanced Local Monitoring
 
-A Docker Compose based real-time monitoring pipeline that collects CPU and memory metrics, streams them through Kafka, detects CPU anomalies with an EWMA + 3 sigma model, stores results in Postgres, and visualizes the data in Grafana.
+RTM-AI is a local real-time observability demo that streams simulated system metrics through Kafka, registers event contracts in Schema Registry, scores anomalies with a PyFlink stream processor, stores time-series data in TimescaleDB, and visualizes the system through Grafana and a simple browser control panel.
 
 ## Architecture
 
 ```text
-producer -> Kafka metrics_raw -> anomaly-detector -> Kafka metrics_anomalies
+Demo API -> Kafka incident_commands -> Producer / Simulator
                                       |
                                       v
-consumer ------------------------> Postgres -> Grafana
+Producer -> Kafka metrics_raw -> PyFlink Processor -> Kafka metrics_anomalies
+                                      |
+                                      v
+Consumer -----------------------> TimescaleDB -> Grafana + Demo API
 ```
 
 ## Tech Stack
 
 | Layer | Technology | Purpose |
 | --- | --- | --- |
-| Metrics collection | Python, psutil | Collect CPU and memory usage |
-| Streaming | Apache Kafka, Zookeeper | Transport metric events |
-| Processing | Python anomaly detector | EWMA + 3 sigma CPU anomaly detection |
-| Storage | Postgres | Store raw metrics and anomaly events |
-| Visualization | Grafana | Dashboard for CPU, memory, and anomaly score |
-| Kafka inspection | Kafka UI | View topics and messages locally |
-| Runtime | Docker Compose | Local multi-container orchestration |
-
-## Repository Structure
-
-```text
-.
-├── anomaly-detector/
-│   ├── anomaly_detector.py
-│   ├── Dockerfile
-│   └── requirements.txt
-├── consumer/
-│   ├── consumer.py
-│   ├── Dockerfile
-│   └── requirements.txt
-├── producer/
-│   ├── producer.py
-│   ├── Dockerfile
-│   └── requirements.txt
-├── grafana/
-│   ├── dashboards/rtm-dashboard.json
-│   └── provisioning/
-├── docker-compose.yml
-└── README.md
-```
+| Stream transport | Kafka, Zookeeper | Metric and incident event topics |
+| Schema management | Confluent Schema Registry | JSON schema registration for public event contracts |
+| Metric generation | Python, psutil | Host metrics plus simulated incidents |
+| Stream processing | PyFlink | Stateful EWMA anomaly scoring |
+| Storage | TimescaleDB | Hypertables for raw metrics and anomaly events |
+| Dashboarding | Grafana | Time-series and anomaly dashboards |
+| Demo UI/API | FastAPI | Non-technical incident controls and latest-event APIs |
+| Local runtime | Docker Compose | One-command local stack |
 
 ## Quick Start
 
@@ -53,107 +34,125 @@ Prerequisites:
 - Docker
 - Docker Compose
 
-Start the full pipeline:
+Start the advanced local stack:
 
 ```bash
 docker compose up --build
 ```
 
-Useful local URLs:
+Open:
 
+- Demo control panel: http://localhost:8000
 - Grafana: http://localhost:3000
 - Kafka UI: http://localhost:8080
+- Schema Registry: http://localhost:8081
 
-Default Grafana login:
+Grafana login:
 
 - Username: `admin`
 - Password: `admin`
 
-Grafana provisions the Postgres datasource and dashboard automatically.
+## Demo Flow
 
-## Data Flow
+1. Open the demo control panel at http://localhost:8000.
+2. Click an incident button such as `CPU Spike`, `Memory Leak`, `Disk Pressure`, or `Network Burst`.
+3. The API publishes an `IncidentCommand` to Kafka.
+4. The producer applies the scenario and emits richer `RawMetric` events.
+5. PyFlink scores anomalies per host and metric.
+6. The consumer stores raw and anomaly events in TimescaleDB.
+7. Grafana and the demo API show the latest metrics and anomaly events.
 
-1. `producer/producer.py` publishes metrics to Kafka topic `metrics_raw`.
-2. `anomaly-detector/anomaly_detector.py` consumes `metrics_raw`, maintains per-host EWMA state, and publishes CPU anomaly events to `metrics_anomalies`.
-3. `consumer/consumer.py` stores both raw metrics and anomaly events in Postgres.
-4. Grafana reads Postgres and renders the dashboard from `grafana/dashboards/rtm-dashboard.json`.
+## Public Event Contracts
 
-## Kafka Topics
+The checked-in JSON schemas live in `schemas/`.
+
+`RawMetric`:
+
+```text
+event_id, host, ts, cpu, mem, disk, net_in, net_out, scenario, source
+```
+
+`AnomalyEvent`:
+
+```text
+event_id, host, ts, metric, value, baseline, std, score, severity, scenario
+```
+
+`IncidentCommand`:
+
+```text
+incident_id, type, host, duration_seconds, intensity, created_at
+```
+
+Kafka topics:
 
 - `metrics_raw`
 - `metrics_anomalies`
+- `incident_commands`
 
-List topics:
+## API
 
 ```bash
-docker exec -it rtm-kafka kafka-topics --bootstrap-server kafka:9092 --list
+curl http://localhost:8000/api/health
+curl http://localhost:8000/api/metrics/latest
+curl http://localhost:8000/api/anomalies/latest
 ```
+
+Create an incident:
+
+```bash
+curl -X POST http://localhost:8000/api/incidents \
+  -H "Content-Type: application/json" \
+  -d '{"type":"cpu_spike","host":"*","duration_seconds":120,"intensity":1.0}'
+```
+
+Supported incident types:
+
+- `cpu_spike`
+- `memory_leak`
+- `disk_pressure`
+- `network_burst`
 
 ## Database
 
-Connect to Postgres:
+Connect to TimescaleDB:
 
 ```bash
 docker exec -it rtm-postgres psql -U rtm -d rtm
 ```
 
-Tables created by the consumer:
-
-- `metrics_raw`
-- `metrics_anomalies`
-
-Example queries:
+Useful queries:
 
 ```sql
-SELECT * FROM metrics_raw ORDER BY ts DESC LIMIT 5;
-SELECT * FROM metrics_anomalies ORDER BY ts DESC LIMIT 5;
+SELECT * FROM metrics_raw ORDER BY time DESC LIMIT 5;
+SELECT * FROM metrics_anomalies ORDER BY time DESC LIMIT 5;
 ```
 
-## Anomaly Detection
+## Tests
 
-The anomaly detector uses an exponentially weighted moving average per host:
-
-```python
-ewma_new = ALPHA * value + (1 - ALPHA) * ewma
-ewmsq_new = ALPHA * (value**2) + (1 - ALPHA) * ewmsq
-variance = max(ewmsq_new - ewma_new**2, 0)
-std = sqrt(variance)
-score = abs(value - ewma_new) / std
-```
-
-Events with `score >= 3` are stored in `metrics_anomalies`.
-
-## Configuration
-
-The Python services use environment variables with Docker-friendly defaults:
-
-| Variable | Default | Used by |
-| --- | --- | --- |
-| `KAFKA_BROKER` | `kafka:9092` | producer, consumer, anomaly detector |
-| `METRICS_RAW_TOPIC` | `metrics_raw` | producer, consumer, anomaly detector |
-| `METRICS_ANOMALY_TOPIC` | `metrics_anomalies` | consumer, anomaly detector |
-| `PG_HOST` | `postgres` | consumer |
-| `PG_DB` | `rtm` | consumer |
-| `PG_USER` | `rtm` | consumer |
-| `PG_PASSWORD` | `rtm` | consumer |
-
-## Troubleshooting
-
-Check service status:
+Install local test dependencies:
 
 ```bash
-docker compose ps
+python3 -m pip install -r requirements-dev.txt
 ```
 
-Follow logs:
+Run tests:
 
 ```bash
-docker compose logs -f producer anomaly-detector consumer
+python3 -m pytest
 ```
 
-Restart from a clean local database and Grafana volume:
+Run config checks:
 
 ```bash
-docker compose down -v
-docker compose up --build
+docker compose config --quiet
+python3 -c 'import json; json.load(open("grafana/dashboards/rtm-dashboard.json"))'
+```
+
+## Legacy Detector
+
+The original lightweight Python anomaly detector is kept as a fallback profile:
+
+```bash
+docker compose --profile legacy up --build anomaly-detector
 ```
