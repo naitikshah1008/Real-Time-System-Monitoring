@@ -14,7 +14,6 @@ state = {}   # host -> (ewma, ewmsq)
 def detect_anomaly(event):
     host = event["host"]
     value = float(event["cpu"])
-    mem = event.get("mem")
     ts = event["ts"]
 
     prev = state.get(host)
@@ -24,25 +23,30 @@ def detect_anomaly(event):
 
     ewma, ewmsq = prev
 
+    var_est = max(ewmsq - ewma * ewma, 0.0)
+    std = math.sqrt(var_est)
+    if std > 0:
+        score = abs(value - ewma) / std
+    else:
+        score = 0.0 if value == ewma else abs(value - ewma) / max(abs(ewma) * 0.05, 1.0)
+
     ewma_new = ALPHA * value + (1 - ALPHA) * ewma
     ewmsq_new = ALPHA * (value * value) + (1 - ALPHA) * ewmsq
 
     state[host] = (ewma_new, ewmsq_new)
 
-    var_est = max(ewmsq_new - ewma_new * ewma_new, 0.0)
-    std = math.sqrt(var_est)
-    score = abs(value - ewma_new) / std if std > 0 else 0.0
-
     if score >= 3:
         return {
+            "event_id": f"{event['event_id']}-cpu-legacy",
             "host": host,
-            "cpu": value,
-            "mem": mem,
             "ts": ts,
-            "ewma": ewma_new,
+            "metric": "cpu",
+            "value": value,
+            "baseline": ewma,
             "std": std,
             "score": score,
-            "type": "ANOMALY"
+            "severity": "critical" if score >= 5 else "warning",
+            "scenario": event.get("scenario", "unknown"),
         }
 
     return None
