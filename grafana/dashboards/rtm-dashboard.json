@@ -16,145 +16,183 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1,
   "links": [],
   "liveNow": false,
   "panels": [
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "rtm-postgres"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "spanNulls": true
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
-      "id": 1,
-      "options": {
-        "legend": { "showLegend": true },
-        "tooltip": { "mode": "single" }
-      },
-      "targets": [
-        {
-          "format": "time_series",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT to_timestamp(ts) AS time, host, cpu FROM metrics_raw WHERE $__timeFilter(to_timestamp(ts)) ORDER BY ts ASC",
-          "refId": "A",
-          "select": [ [ { "params": ["cpu"], "type": "column" } ] ],
-          "table": "metrics_raw",
-          "timeColumn": "ts"
-        }
-      ],
-      "title": "CPU Usage (%)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "rtm-postgres"
-      },
+      "datasource": { "type": "postgres", "uid": "rtm-postgres" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "spanNulls": true
-          }
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2, "spanNulls": true },
+          "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
-      "id": 2,
-      "options": {
-        "legend": { "showLegend": true },
-        "tooltip": { "mode": "single" }
-      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
       "targets": [
         {
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT to_timestamp(ts) AS time, host, mem FROM metrics_raw WHERE $__timeFilter(to_timestamp(ts)) ORDER BY ts ASC",
+          "rawSql": "SELECT time, host AS metric, cpu AS value FROM metrics_raw WHERE $__timeFilter(time) AND host LIKE '$host' AND scenario LIKE '$scenario' ORDER BY time ASC",
           "refId": "A"
         }
       ],
-      "title": "Memory Usage (%)",
+      "title": "CPU Usage",
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "rtm-postgres"
-      },
+      "datasource": { "type": "postgres", "uid": "rtm-postgres" },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "fixed", "fixedColor": "red" },
-          "custom": {
-            "drawStyle": "points",
-            "lineWidth": 0,
-            "pointSize": 6
-          }
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2, "spanNulls": true },
+          "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
-      "id": 3,
-      "options": {
-        "legend": { "showLegend": true },
-        "tooltip": { "mode": "single" }
-      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
       "targets": [
         {
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT to_timestamp(ts) AS time, host, score FROM metrics_anomalies WHERE $__timeFilter(to_timestamp(ts)) ORDER BY ts ASC",
+          "rawSql": "SELECT time, host AS metric, mem AS value FROM metrics_raw WHERE $__timeFilter(time) AND host LIKE '$host' AND scenario LIKE '$scenario' ORDER BY time ASC",
           "refId": "A"
         }
       ],
-      "title": "CPU Anomaly Score (3 Sigma Events)",
+      "title": "Memory Usage",
       "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "rtm-postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2, "spanNulls": true },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 3,
+      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, host AS metric, disk AS value FROM metrics_raw WHERE $__timeFilter(time) AND host LIKE '$host' AND scenario LIKE '$scenario' ORDER BY time ASC",
+          "refId": "A"
+        }
+      ],
+      "title": "Disk Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "rtm-postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2, "spanNulls": true },
+          "unit": "KBs"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 4,
+      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, host || ' in' AS metric, net_in AS value FROM metrics_raw WHERE $__timeFilter(time) AND host LIKE '$host' AND scenario LIKE '$scenario' UNION ALL SELECT time, host || ' out' AS metric, net_out AS value FROM metrics_raw WHERE $__timeFilter(time) AND host LIKE '$host' AND scenario LIKE '$scenario' ORDER BY time ASC",
+          "refId": "A"
+        }
+      ],
+      "title": "Network Throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "rtm-postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "points", "lineWidth": 0, "pointSize": 6 },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "id": 5,
+      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, host || ' ' || metric AS metric, score AS value FROM metrics_anomalies WHERE $__timeFilter(time) AND host LIKE '$host' AND scenario LIKE '$scenario' ORDER BY time ASC",
+          "refId": "A"
+        }
+      ],
+      "title": "Anomaly Score",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "rtm-postgres" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "id": 6,
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT time, host, metric, ROUND(score::numeric, 2) AS score, severity, scenario FROM metrics_anomalies WHERE $__timeFilter(time) AND host LIKE '$host' AND scenario LIKE '$scenario' ORDER BY time DESC LIMIT 50",
+          "refId": "A"
+        }
+      ],
+      "title": "Latest Anomaly Events",
+      "type": "table"
     }
   ],
   "refresh": "5s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": ["rtm", "system-monitoring"],
+  "tags": ["rtm", "system-monitoring", "timescale", "flink"],
   "templating": {
     "list": [
       {
-        "datasource": {
-          "type": "postgres",
-          "uid": "rtm-postgres"
-        },
+        "allValue": "%",
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "datasource": { "type": "postgres", "uid": "rtm-postgres" },
+        "includeAll": true,
         "label": "Host",
+        "multi": false,
         "name": "host",
         "query": "SELECT DISTINCT host FROM metrics_raw ORDER BY host;",
+        "refresh": 1,
+        "type": "query"
+      },
+      {
+        "allValue": "%",
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "datasource": { "type": "postgres", "uid": "rtm-postgres" },
+        "includeAll": true,
+        "label": "Scenario",
+        "multi": false,
+        "name": "scenario",
+        "query": "SELECT DISTINCT scenario FROM metrics_raw ORDER BY scenario;",
         "refresh": 1,
         "type": "query"
       }
     ]
   },
-  "time": {
-    "from": "now-15m",
-    "to": "now"
-  },
+  "time": { "from": "now-15m", "to": "now" },
   "timepicker": {},
   "timezone": "",
-  "title": "RTM-AI System Monitoring Dashboard",
+  "title": "RTM-AI Advanced Monitoring Dashboard",
   "version": 1,
   "weekStart": ""
 }

@@ -13,5 +13,5 @@ datasources:
       database: ${POSTGRES_DB}
       sslmode: disable
       postgresVersion: 1600
-      timescaledb: false
+      timescaledb: true
     editable: true
