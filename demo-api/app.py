@@ -5,6 +5,7 @@ import psycopg2
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from kafka import KafkaAdminClient
 from kafka import KafkaProducer
 from psycopg2.extras import RealDictCursor
 
@@ -51,6 +52,19 @@ def get_producer():
     return producer
 
 
+def kafka_is_available():
+    admin = KafkaAdminClient(
+        bootstrap_servers=KAFKA_BROKER,
+        request_timeout_ms=5000,
+        api_version_auto_timeout_ms=10000,
+    )
+    try:
+        admin.list_topics()
+        return True
+    finally:
+        admin.close()
+
+
 def query_rows(sql, params):
     try:
         with get_db_connection() as conn:
@@ -75,7 +89,7 @@ def health():
         postgres_ok = False
 
     try:
-        kafka_ok = bool(get_producer().bootstrap_connected())
+        kafka_ok = kafka_is_available()
     except Exception:
         kafka_ok = False
 
