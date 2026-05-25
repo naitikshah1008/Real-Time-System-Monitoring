@@ -3,13 +3,23 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>RTM-AI Control Panel</title>
+    <title>RTM-AI Live Demo</title>
     <style>
       :root {
         color-scheme: dark;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: #101315;
+        background: #0f1214;
         color: #edf2f4;
+        --page: #0f1214;
+        --panel: #171c1f;
+        --panel-strong: #1e2529;
+        --border: #303940;
+        --muted: #9eacb4;
+        --text: #edf2f4;
+        --green: #36b26b;
+        --red: #e15c64;
+        --yellow: #d7a530;
+        --blue: #5aa7d8;
       }
 
       * {
@@ -19,116 +29,298 @@
       body {
         margin: 0;
         min-height: 100vh;
-        background: #101315;
+        background: var(--page);
       }
 
       header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
-        padding: 18px 24px;
-        border-bottom: 1px solid #2c3438;
-        background: #151a1d;
+        gap: 18px;
+        min-height: 76px;
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border);
+        background: #14191c;
       }
 
       h1,
-      h2 {
+      h2,
+      h3,
+      p {
         margin: 0;
         letter-spacing: 0;
       }
 
       h1 {
-        font-size: 20px;
+        font-size: 22px;
+        line-height: 1.2;
       }
 
       h2 {
         font-size: 15px;
+        line-height: 1.3;
+      }
+
+      h3 {
+        font-size: 14px;
+        line-height: 1.35;
+      }
+
+      a {
+        color: #8ec7ec;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
       }
 
       main {
-        width: min(1180px, 100%);
+        width: min(1260px, 100%);
         margin: 0 auto;
-        padding: 24px;
+        padding: 22px;
+      }
+
+      .eyebrow {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: uppercase;
       }
 
       .status {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        min-height: 32px;
-        padding: 6px 10px;
-        border: 1px solid #354044;
+        min-height: 34px;
+        padding: 7px 11px;
+        border: 1px solid var(--border);
         border-radius: 6px;
-        background: #1a2024;
+        background: var(--panel-strong);
+        color: var(--muted);
         font-size: 13px;
+        white-space: nowrap;
       }
 
       .status-dot {
         width: 9px;
         height: 9px;
         border-radius: 999px;
-        background: #f0b429;
+        background: var(--yellow);
+      }
+
+      .status.ok {
+        color: var(--text);
       }
 
       .status.ok .status-dot {
-        background: #2fb344;
+        background: var(--green);
       }
 
-      .grid {
+      .status.degraded .status-dot {
+        background: var(--red);
+      }
+
+      .layout {
         display: grid;
-        grid-template-columns: 330px 1fr;
-        gap: 20px;
+        grid-template-columns: 340px minmax(0, 1fr);
+        gap: 18px;
         align-items: start;
       }
 
-      section,
+      .right-column {
+        display: grid;
+        gap: 18px;
+      }
+
       .panel {
-        border: 1px solid #2c3438;
+        border: 1px solid var(--border);
         border-radius: 8px;
-        background: #151a1d;
-      }
-
-      section {
-        padding: 18px;
-      }
-
-      .controls {
-        display: grid;
-        gap: 12px;
-        margin-top: 16px;
-      }
-
-      button {
-        min-height: 42px;
-        border: 1px solid #3a474d;
-        border-radius: 6px;
-        color: #edf2f4;
-        background: #22313a;
-        font: inherit;
-        font-size: 14px;
-        cursor: pointer;
-      }
-
-      button:hover {
-        background: #2d414d;
-      }
-
-      button:active {
-        transform: translateY(1px);
-      }
-
-      .tables {
-        display: grid;
-        gap: 20px;
+        background: var(--panel);
+        min-width: 0;
       }
 
       .panel-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 12px;
+        min-height: 54px;
         padding: 14px 16px;
-        border-bottom: 1px solid #2c3438;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .panel-body {
+        padding: 16px;
+      }
+
+      .controls {
+        display: grid;
+        gap: 10px;
+      }
+
+      button {
+        border: 1px solid #3b474e;
+        border-radius: 6px;
+        color: var(--text);
+        background: #22313a;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #2c414c;
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+
+      .incident-button {
+        display: grid;
+        gap: 4px;
+        min-height: 64px;
+        padding: 11px 12px;
+        text-align: left;
+      }
+
+      .button-title {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .button-meta {
+        color: #b6c5cc;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .last-action {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 0.85fr);
+        gap: 18px;
+      }
+
+      .summary-text {
+        display: grid;
+        gap: 10px;
+        align-content: start;
+      }
+
+      .summary-headline {
+        font-size: 24px;
+        font-weight: 750;
+        line-height: 1.18;
+      }
+
+      .summary-details {
+        color: #b7c4ca;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .metric-strip {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(96px, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .metric-card {
+        min-height: 82px;
+        padding: 12px;
+        border: 1px solid #2e3a41;
+        border-radius: 8px;
+        background: #12181b;
+      }
+
+      .metric-label {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .metric-value {
+        margin-top: 8px;
+        font-size: 24px;
+        font-weight: 760;
+        line-height: 1;
+      }
+
+      .explanation {
+        display: grid;
+        gap: 12px;
+      }
+
+      .explanation-title {
+        font-size: 18px;
+        font-weight: 760;
+        line-height: 1.25;
+      }
+
+      .explanation-copy {
+        color: #c3d0d6;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .callouts {
+        display: grid;
+        gap: 10px;
+        margin-top: 2px;
+      }
+
+      .callout {
+        border-left: 3px solid var(--blue);
+        padding: 9px 10px;
+        background: #12181b;
+      }
+
+      .callout strong {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        max-width: 100%;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: #263238;
+        color: #cfe3ea;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .badge.critical {
+        background: #5b1f2a;
+        color: #ffd6dd;
+      }
+
+      .badge.warning {
+        background: #604516;
+        color: #ffe1a3;
+      }
+
+      .badge.normal {
+        background: #1f3c2d;
+        color: #bdeed1;
+      }
+
+      .table-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 18px;
       }
 
       .table-wrap {
@@ -150,41 +342,42 @@
       }
 
       th {
-        color: #aab7bd;
-        font-weight: 600;
+        color: var(--muted);
+        font-weight: 650;
       }
 
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        min-height: 24px;
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: #263238;
-        color: #cfe3ea;
+      .empty-row {
+        color: var(--muted);
       }
 
-      .critical {
-        background: #5b1f2a;
-        color: #ffd6dd;
+      @media (max-width: 1050px) {
+        .layout,
+        .summary-grid,
+        .table-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .metric-strip {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
 
-      .warning {
-        background: #604516;
-        color: #ffe1a3;
-      }
-
-      @media (max-width: 860px) {
+      @media (max-width: 640px) {
         header {
           align-items: flex-start;
           flex-direction: column;
-        }
-
-        main {
           padding: 16px;
         }
 
-        .grid {
+        main {
+          padding: 14px;
+        }
+
+        .summary-headline {
+          font-size: 20px;
+        }
+
+        .metric-strip {
           grid-template-columns: 1fr;
         }
       }
@@ -192,69 +385,165 @@
   </head>
   <body>
     <header>
-      <h1>RTM-AI Control Panel</h1>
+      <div>
+        <p class="eyebrow">RTM-AI</p>
+        <h1>Live Observability Demo</h1>
+      </div>
       <div class="status" id="health"><span class="status-dot"></span><span>Checking</span></div>
     </header>
+
     <main>
-      <div class="grid">
-        <section>
-          <h2>Incident Simulator</h2>
-          <div class="controls">
-            <button data-type="cpu_spike">CPU Spike</button>
-            <button data-type="memory_leak">Memory Leak</button>
-            <button data-type="disk_pressure">Disk Pressure</button>
-            <button data-type="network_burst">Network Burst</button>
+      <div class="layout">
+        <aside class="panel">
+          <div class="panel-header">
+            <h2>Incident Simulator</h2>
+            <span class="last-action" id="last-action">Ready</span>
           </div>
-        </section>
-        <div class="tables">
-          <div class="panel">
-            <div class="panel-header">
-              <h2>Latest Metrics</h2>
-              <a href="http://localhost:3000" target="_blank" rel="noreferrer">Grafana</a>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Host</th>
-                    <th>Scenario</th>
-                    <th>CPU</th>
-                    <th>Mem</th>
-                    <th>Disk</th>
-                    <th>Net In</th>
-                    <th>Net Out</th>
-                  </tr>
-                </thead>
-                <tbody id="metrics"></tbody>
-              </table>
+          <div class="panel-body">
+            <div class="controls">
+              <button class="incident-button" data-type="cpu_spike">
+                <span class="button-title">CPU Spike</span>
+                <span class="button-meta">Raise compute demand on the demo host.</span>
+              </button>
+              <button class="incident-button" data-type="memory_leak">
+                <span class="button-title">Memory Leak</span>
+                <span class="button-meta">Increase memory pressure over time.</span>
+              </button>
+              <button class="incident-button" data-type="disk_pressure">
+                <span class="button-title">Disk Pressure</span>
+                <span class="button-meta">Push disk utilization toward saturation.</span>
+              </button>
+              <button class="incident-button" data-type="network_burst">
+                <span class="button-title">Network Burst</span>
+                <span class="button-meta">Generate a burst of network traffic.</span>
+              </button>
             </div>
           </div>
-          <div class="panel">
+        </aside>
+
+        <div class="right-column">
+          <section class="panel">
             <div class="panel-header">
-              <h2>Latest Anomalies</h2>
+              <h2>Current System State</h2>
+              <span class="badge" id="scenario-badge">Unknown</span>
             </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Host</th>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Severity</th>
-                    <th>Scenario</th>
-                  </tr>
-                </thead>
-                <tbody id="anomalies"></tbody>
-              </table>
+            <div class="panel-body">
+              <div class="summary-grid">
+                <div class="summary-text">
+                  <p class="summary-headline" id="current-headline">Waiting for telemetry</p>
+                  <p class="summary-details" id="current-details">No advanced metric rows have been stored yet.</p>
+                  <p class="last-action" id="updated-at">No timestamp</p>
+                </div>
+                <div class="explanation" id="anomaly-panel">
+                  <span class="badge">No anomaly selected</span>
+                  <p class="explanation-title" id="anomaly-headline">No recent anomaly</p>
+                  <p class="explanation-copy" id="anomaly-explanation">The detector has not emitted a recent advanced anomaly event.</p>
+                  <div class="callouts">
+                    <div class="callout">
+                      <strong>Impact</strong>
+                      <p class="explanation-copy" id="anomaly-impact">Waiting for anomaly context.</p>
+                    </div>
+                    <div class="callout">
+                      <strong>Next Check</strong>
+                      <p class="explanation-copy" id="anomaly-recommendation">Recent metrics will appear automatically.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="metric-strip" id="metric-strip"></div>
             </div>
+          </section>
+
+          <div class="table-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <h2>Latest Metrics</h2>
+                <a href="http://localhost:3000" target="_blank" rel="noreferrer">Grafana</a>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Host</th>
+                      <th>Scenario</th>
+                      <th>CPU</th>
+                      <th>Mem</th>
+                      <th>Disk</th>
+                      <th>Net In</th>
+                      <th>Net Out</th>
+                    </tr>
+                  </thead>
+                  <tbody id="metrics"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <h2>Latest Anomalies</h2>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Metric</th>
+                      <th>Score</th>
+                      <th>Severity</th>
+                      <th>Scenario</th>
+                    </tr>
+                  </thead>
+                  <tbody id="anomalies"></tbody>
+                </table>
+              </div>
+            </section>
           </div>
         </div>
       </div>
     </main>
+
     <script>
       const health = document.querySelector("#health");
+      const lastAction = document.querySelector("#last-action");
+      const currentHeadline = document.querySelector("#current-headline");
+      const currentDetails = document.querySelector("#current-details");
+      const updatedAt = document.querySelector("#updated-at");
+      const scenarioBadge = document.querySelector("#scenario-badge");
+      const metricStrip = document.querySelector("#metric-strip");
       const metricsBody = document.querySelector("#metrics");
       const anomaliesBody = document.querySelector("#anomalies");
+      const anomalyPanel = document.querySelector("#anomaly-panel");
+      const anomalyHeadline = document.querySelector("#anomaly-headline");
+      const anomalyExplanation = document.querySelector("#anomaly-explanation");
+      const anomalyImpact = document.querySelector("#anomaly-impact");
+      const anomalyRecommendation = document.querySelector("#anomaly-recommendation");
+
+      const incidentLabels = {
+        cpu_spike: "CPU Spike",
+        memory_leak: "Memory Leak",
+        disk_pressure: "Disk Pressure",
+        network_burst: "Network Burst",
+      };
+      const scenarioLabels = {
+        cpu_spike: "CPU Spike",
+        memory_leak: "Memory Leak",
+        disk_pressure: "Disk Pressure",
+        network_burst: "Network Burst",
+        normal: "Normal",
+        unknown: "Unknown",
+      };
+
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (char) => {
+          const replacements = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+          };
+          return replacements[char];
+        });
+      }
 
       function pct(value) {
         return `${Number(value || 0).toFixed(1)}%`;
@@ -264,19 +553,118 @@
         return Number(value || 0).toFixed(1);
       }
 
+      function timeLabel(value) {
+        if (!value) {
+          return "No timestamp";
+        }
+        return `Updated ${new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+      }
+
+      function badgeClass(value) {
+        if (value === "critical") {
+          return "critical";
+        }
+        if (value === "warning") {
+          return "warning";
+        }
+        if (value === "normal" || value === "Normal") {
+          return "normal";
+        }
+        return "";
+      }
+
+      function scenarioName(value) {
+        if (!value) {
+          return "Unknown";
+        }
+        return String(value)
+          .split("+")
+          .map((part) => scenarioLabels[part] || part.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase()))
+          .join(" + ");
+      }
+
+      async function fetchJson(url, options) {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+          throw new Error(`${response.status} ${response.statusText}`);
+        }
+        return response.json();
+      }
+
       async function loadHealth() {
-        const data = await fetch("/api/health").then((response) => response.json());
+        const data = await fetchJson("/api/health");
         health.classList.toggle("ok", data.status === "ok");
-        health.querySelector("span:last-child").textContent = data.status.toUpperCase();
+        health.classList.toggle("degraded", data.status !== "ok");
+        health.querySelector("span:last-child").textContent = data.status === "ok" ? "System OK" : "Degraded";
+      }
+
+      function renderMetricCards(metric) {
+        const cards = [
+          ["CPU", metric ? pct(metric.cpu) : "--"],
+          ["Memory", metric ? pct(metric.mem) : "--"],
+          ["Disk", metric ? pct(metric.disk) : "--"],
+          ["Net In", metric ? `${number(metric.net_in)} KB/s` : "--"],
+          ["Net Out", metric ? `${number(metric.net_out)} KB/s` : "--"],
+        ];
+
+        metricStrip.innerHTML = cards
+          .map(
+            ([label, value]) => `<div class="metric-card">
+              <p class="metric-label">${escapeHtml(label)}</p>
+              <p class="metric-value">${escapeHtml(value)}</p>
+            </div>`,
+          )
+          .join("");
+      }
+
+      function renderSummary(data) {
+        const current = data.current || {};
+        const metric = data.latest_metric;
+        currentHeadline.textContent = current.headline || "Waiting for telemetry";
+        currentDetails.textContent = current.details || "No advanced metric rows have been stored yet.";
+        updatedAt.textContent = timeLabel(metric && metric.time);
+        scenarioBadge.textContent = current.scenario_label || "Unknown";
+        scenarioBadge.className = `badge ${badgeClass(current.scenario_label)}`;
+        renderMetricCards(metric);
+        renderExplanation((data.latest_anomalies || [])[0]);
+      }
+
+      function renderExplanation(anomaly) {
+        if (!anomaly) {
+          anomalyPanel.querySelector(".badge").textContent = "No anomaly selected";
+          anomalyPanel.querySelector(".badge").className = "badge";
+          anomalyHeadline.textContent = "No recent anomaly";
+          anomalyExplanation.textContent = "The detector has not emitted a recent advanced anomaly event.";
+          anomalyImpact.textContent = "Waiting for anomaly context.";
+          anomalyRecommendation.textContent = "Recent metrics will appear automatically.";
+          return;
+        }
+
+        anomalyPanel.querySelector(".badge").textContent = anomaly.severity_label || anomaly.severity || "Warning";
+        anomalyPanel.querySelector(".badge").className = `badge ${badgeClass(anomaly.severity)}`;
+        anomalyHeadline.textContent = anomaly.headline || "Recent anomaly";
+        anomalyExplanation.textContent = anomaly.explanation || "This metric moved away from its learned baseline.";
+        anomalyImpact.textContent = anomaly.impact || "This signal may affect service reliability.";
+        anomalyRecommendation.textContent = anomaly.recommendation || "Review recent host and service activity.";
+      }
+
+      async function loadSummary() {
+        const data = await fetchJson("/api/summary");
+        renderSummary(data);
       }
 
       async function loadMetrics() {
-        const rows = await fetch("/api/metrics/latest?limit=12").then((response) => response.json());
+        const rows = await fetchJson("/api/metrics/latest?limit=10");
+        if (!rows.length) {
+          metricsBody.innerHTML = `<tr><td class="empty-row" colspan="7">No metrics yet</td></tr>`;
+          return;
+        }
+
         metricsBody.innerHTML = rows
           .map(
             (row) => `<tr>
-              <td>${row.host}</td>
-              <td><span class="badge">${row.scenario}</span></td>
+              <td>${escapeHtml(row.host)}</td>
+              <td><span class="badge ${badgeClass(row.scenario)}">${escapeHtml(scenarioName(row.scenario))}</span></td>
               <td>${pct(row.cpu)}</td>
               <td>${pct(row.mem)}</td>
               <td>${pct(row.disk)}</td>
@@ -288,39 +676,51 @@
       }
 
       async function loadAnomalies() {
-        const rows = await fetch("/api/anomalies/latest?limit=12").then((response) => response.json());
+        const rows = await fetchJson("/api/anomalies/latest?limit=10");
+        if (!rows.length) {
+          anomaliesBody.innerHTML = `<tr><td class="empty-row" colspan="4">No anomalies yet</td></tr>`;
+          return;
+        }
+
         anomaliesBody.innerHTML = rows
           .map(
-            (row) => `<tr>
-              <td>${row.host}</td>
-              <td>${row.metric}</td>
+            (row) => `<tr title="${escapeHtml(row.explanation)}">
+              <td>${escapeHtml(row.metric_label || row.metric)}</td>
               <td>${number(row.score)}</td>
-              <td><span class="badge ${row.severity}">${row.severity}</span></td>
-              <td>${row.scenario}</td>
+              <td><span class="badge ${badgeClass(row.severity)}">${escapeHtml(row.severity)}</span></td>
+              <td>${escapeHtml(row.scenario_label || row.scenario)}</td>
             </tr>`,
           )
           .join("");
       }
 
       async function refresh() {
-        await Promise.allSettled([loadHealth(), loadMetrics(), loadAnomalies()]);
+        await Promise.allSettled([loadHealth(), loadSummary(), loadMetrics(), loadAnomalies()]);
       }
 
       document.querySelectorAll("button[data-type]").forEach((button) => {
         button.addEventListener("click", async () => {
+          const type = button.dataset.type;
           button.disabled = true;
-          await fetch("/api/incidents", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: button.dataset.type,
-              host: "*",
-              duration_seconds: 120,
-              intensity: 1.0,
-            }),
-          });
-          button.disabled = false;
-          refresh();
+          lastAction.textContent = "Sending";
+          try {
+            await fetchJson("/api/incidents", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                type,
+                host: "*",
+                duration_seconds: 120,
+                intensity: 1.0,
+              }),
+            });
+            lastAction.textContent = `${incidentLabels[type]} sent`;
+            await refresh();
+          } catch (error) {
+            lastAction.textContent = "Request failed";
+          } finally {
+            button.disabled = false;
+          }
         });
       });
 

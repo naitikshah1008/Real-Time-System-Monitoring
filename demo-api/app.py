@@ -9,6 +9,8 @@ from kafka import KafkaAdminClient
 from kafka import KafkaProducer
 from psycopg2.extras import RealDictCursor
 
+from anomaly_explanations import enrich_anomalies
+from anomaly_explanations import summarize_current_metric
 from incident_commands import build_incident_command
 
 
@@ -75,6 +77,47 @@ def query_rows(sql, params):
         return []
 
 
+def fetch_latest_metrics(limit):
+    return query_rows(
+        """
+        SELECT event_id, time, host, ts, cpu, mem, disk, net_in, net_out, scenario, source
+        FROM metrics_raw
+        WHERE event_id IS NOT NULL AND time IS NOT NULL
+        ORDER BY time DESC NULLS LAST
+        LIMIT %s
+        """,
+        (limit,),
+    )
+
+
+def fetch_latest_anomalies(limit):
+    return query_rows(
+        """
+        SELECT event_id, time, host, ts, metric, value, baseline, std, score, severity, scenario
+        FROM metrics_anomalies
+        WHERE event_id IS NOT NULL AND time IS NOT NULL
+        ORDER BY time DESC NULLS LAST
+        LIMIT %s
+        """,
+        (limit,),
+    )
+
+
+def fetch_recent_anomalies(limit, window_minutes=10):
+    return query_rows(
+        """
+        SELECT event_id, time, host, ts, metric, value, baseline, std, score, severity, scenario
+        FROM metrics_anomalies
+        WHERE event_id IS NOT NULL
+          AND time IS NOT NULL
+          AND time >= NOW() - (%s * INTERVAL '1 minute')
+        ORDER BY time DESC NULLS LAST
+        LIMIT %s
+        """,
+        (window_minutes, limit),
+    )
+
+
 @app.get("/api/health")
 def health():
     postgres_ok = False
@@ -103,31 +146,25 @@ def health():
 @app.get("/api/metrics/latest")
 def latest_metrics(limit: int = 50):
     limit = max(1, min(limit, 500))
-    return query_rows(
-        """
-        SELECT event_id, time, host, ts, cpu, mem, disk, net_in, net_out, scenario, source
-        FROM metrics_raw
-        WHERE event_id IS NOT NULL AND time IS NOT NULL
-        ORDER BY time DESC NULLS LAST
-        LIMIT %s
-        """,
-        (limit,),
-    )
+    return fetch_latest_metrics(limit)
 
 
 @app.get("/api/anomalies/latest")
 def latest_anomalies(limit: int = 50):
     limit = max(1, min(limit, 500))
-    return query_rows(
-        """
-        SELECT event_id, time, host, ts, metric, value, baseline, std, score, severity, scenario
-        FROM metrics_anomalies
-        WHERE event_id IS NOT NULL AND time IS NOT NULL
-        ORDER BY time DESC NULLS LAST
-        LIMIT %s
-        """,
-        (limit,),
-    )
+    return enrich_anomalies(fetch_latest_anomalies(limit))
+
+
+@app.get("/api/summary")
+def summary():
+    metrics = fetch_latest_metrics(1)
+    anomalies = enrich_anomalies(fetch_recent_anomalies(5))
+    latest_metric = metrics[0] if metrics else None
+    return {
+        "current": summarize_current_metric(latest_metric),
+        "latest_metric": latest_metric,
+        "latest_anomalies": anomalies,
+    }
 
 
 @app.post("/api/incidents")
