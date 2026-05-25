@@ -131,6 +131,16 @@ SELECT * FROM metrics_raw ORDER BY time DESC LIMIT 5;
 SELECT * FROM metrics_anomalies ORDER BY time DESC LIMIT 5;
 ```
 
+## Grafana Dashboard
+
+The provisioned dashboard includes:
+
+- Pipeline volume: raw event count and anomaly count.
+- Freshness: latest raw metric age and latest anomaly age.
+- Flow rates: producer event rate and anomaly event rate by severity.
+- Scenario mix: event volume grouped by active simulation scenario.
+- Host metrics: CPU, memory, disk, network, anomaly scores, and latest anomaly events.
+
 ## Tests
 
 Install local test dependencies:

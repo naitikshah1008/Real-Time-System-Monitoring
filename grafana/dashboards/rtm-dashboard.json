@@ -20,18 +20,390 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": { "type": "postgres", "uid": "rtm-postgres" },
+      "datasource": {
+        "type": "postgres",
+        "uid": "rtm-postgres"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2, "spanNulls": true },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*)::double precision AS value FROM metrics_raw WHERE $__timeFilter(time) AND host LIKE '$host' AND scenario LIKE '$scenario'",
+          "refId": "A"
+        }
+      ],
+      "title": "Raw Events In Range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "rtm-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*)::double precision AS value FROM metrics_anomalies WHERE $__timeFilter(time) AND host LIKE '$host' AND scenario LIKE '$scenario'",
+          "refId": "A"
+        }
+      ],
+      "title": "Anomalies In Range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "rtm-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 60
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT EXTRACT(EPOCH FROM (NOW() - MAX(time)))::double precision AS value FROM metrics_raw WHERE host LIKE '$host' AND scenario LIKE '$scenario'",
+          "refId": "A"
+        }
+      ],
+      "title": "Telemetry Freshness",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "rtm-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 60
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT EXTRACT(EPOCH FROM (NOW() - MAX(time)))::double precision AS value FROM metrics_anomalies WHERE host LIKE '$host' AND scenario LIKE '$scenario'",
+          "refId": "A"
+        }
+      ],
+      "title": "Anomaly Freshness",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "rtm-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "spanNulls": true
+          },
+          "unit": "eps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time_bucket('30 seconds', time) AS time, 'raw events/sec' AS metric, (COUNT(*) / 30.0)::double precision AS value FROM metrics_raw WHERE $__timeFilter(time) AND host LIKE '$host' AND scenario LIKE '$scenario' GROUP BY 1 ORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Producer Event Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "rtm-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "spanNulls": true
+          },
+          "unit": "eps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time_bucket('30 seconds', time) AS time, COALESCE(severity, 'unknown') AS metric, (COUNT(*) / 30.0)::double precision AS value FROM metrics_anomalies WHERE $__timeFilter(time) AND host LIKE '$host' AND scenario LIKE '$scenario' GROUP BY 1, 2 ORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Anomaly Event Rate By Severity",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "rtm-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "spanNulls": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time_bucket('1 minute', time) AS time, scenario AS metric, COUNT(*)::double precision AS value FROM metrics_raw WHERE $__timeFilter(time) AND host LIKE '$host' AND scenario LIKE '$scenario' GROUP BY 1, 2 ORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Scenario Event Mix",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "rtm-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "spanNulls": true
+          },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
       "id": 1,
-      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "options": {
+        "legend": {
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "targets": [
         {
           "format": "time_series",
@@ -44,18 +416,40 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "postgres", "uid": "rtm-postgres" },
+      "datasource": {
+        "type": "postgres",
+        "uid": "rtm-postgres"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2, "spanNulls": true },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "spanNulls": true
+          },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
       "id": 2,
-      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "options": {
+        "legend": {
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "targets": [
         {
           "format": "time_series",
@@ -68,18 +462,40 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "postgres", "uid": "rtm-postgres" },
+      "datasource": {
+        "type": "postgres",
+        "uid": "rtm-postgres"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2, "spanNulls": true },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "spanNulls": true
+          },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
       "id": 3,
-      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "options": {
+        "legend": {
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "targets": [
         {
           "format": "time_series",
@@ -92,18 +508,40 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "postgres", "uid": "rtm-postgres" },
+      "datasource": {
+        "type": "postgres",
+        "uid": "rtm-postgres"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2, "spanNulls": true },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "spanNulls": true
+          },
           "unit": "KBs"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 26
+      },
       "id": 4,
-      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "options": {
+        "legend": {
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "targets": [
         {
           "format": "time_series",
@@ -116,18 +554,39 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "postgres", "uid": "rtm-postgres" },
+      "datasource": {
+        "type": "postgres",
+        "uid": "rtm-postgres"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "points", "lineWidth": 0, "pointSize": 6 },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "points",
+            "lineWidth": 0,
+            "pointSize": 6
+          },
           "unit": "none"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 34
+      },
       "id": 5,
-      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "options": {
+        "legend": {
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "targets": [
         {
           "format": "time_series",
@@ -140,11 +599,24 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "postgres", "uid": "rtm-postgres" },
-      "fieldConfig": { "defaults": {}, "overrides": [] },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": {
+        "type": "postgres",
+        "uid": "rtm-postgres"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 34
+      },
       "id": 6,
-      "options": { "showHeader": true },
+      "options": {
+        "showHeader": true
+      },
       "targets": [
         {
           "format": "table",
@@ -160,13 +632,25 @@
   "refresh": "5s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": ["rtm", "system-monitoring", "timescale", "flink"],
+  "tags": [
+    "rtm",
+    "system-monitoring",
+    "timescale",
+    "flink"
+  ],
   "templating": {
     "list": [
       {
         "allValue": "%",
-        "current": { "selected": true, "text": "All", "value": "$__all" },
-        "datasource": { "type": "postgres", "uid": "rtm-postgres" },
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "rtm-postgres"
+        },
         "includeAll": true,
         "label": "Host",
         "multi": false,
@@ -177,8 +661,15 @@
       },
       {
         "allValue": "%",
-        "current": { "selected": true, "text": "All", "value": "$__all" },
-        "datasource": { "type": "postgres", "uid": "rtm-postgres" },
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "rtm-postgres"
+        },
         "includeAll": true,
         "label": "Scenario",
         "multi": false,
@@ -189,10 +680,13 @@
       }
     ]
   },
-  "time": { "from": "now-15m", "to": "now" },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "",
   "title": "RTM-AI Advanced Monitoring Dashboard",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
