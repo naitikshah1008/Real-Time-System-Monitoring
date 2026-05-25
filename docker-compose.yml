@@ -2,6 +2,7 @@ services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.7.0
     container_name: rtm-zookeeper
+    restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -11,6 +12,7 @@ services:
   kafka:
     image: confluentinc/cp-kafka:7.7.0
     container_name: rtm-kafka
+    restart: unless-stopped
     depends_on:
       - zookeeper
     ports:
@@ -30,11 +32,33 @@ services:
       timeout: 10s
       retries: 10
 
+  kafka-init:
+    image: confluentinc/cp-kafka:7.7.0
+    container_name: rtm-kafka-init
+    restart: on-failure
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command:
+      - bash
+      - -lc
+      - |
+        set -euo pipefail
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic metrics_raw --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic metrics_anomalies --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic incident_commands --partitions 1 --replication-factor 1
+
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: rtm-kafka-ui
+    profiles:
+      - debug
+    restart: unless-stopped
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
@@ -46,6 +70,7 @@ services:
   schema-registry:
     image: confluentinc/cp-schema-registry:7.7.0
     container_name: rtm-schema-registry
+    restart: unless-stopped
     depends_on:
       kafka:
         condition: service_healthy
@@ -64,6 +89,7 @@ services:
   schema-registrar:
     build: ./schema-registry
     container_name: rtm-schema-registrar
+    restart: on-failure
     depends_on:
       schema-registry:
         condition: service_healthy
@@ -76,6 +102,7 @@ services:
   postgres:
     image: timescale/timescaledb:latest-pg16
     container_name: rtm-postgres
+    restart: unless-stopped
     command: ["postgres", "-c", "shared_preload_libraries=timescaledb"]
     environment:
       POSTGRES_USER: rtm
@@ -95,9 +122,10 @@ services:
   producer:
     build: ./producer
     container_name: rtm-producer
+    restart: unless-stopped
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     environment:
       PYTHONUNBUFFERED: 1
       KAFKA_BROKER: kafka:9092
@@ -109,9 +137,10 @@ services:
   consumer:
     build: ./consumer
     container_name: rtm-consumer
+    restart: unless-stopped
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
     environment:
@@ -127,9 +156,10 @@ services:
   stream-processor:
     build: ./stream-processor
     container_name: rtm-stream-processor
+    restart: unless-stopped
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
       schema-registrar:
         condition: service_completed_successfully
     environment:
@@ -144,9 +174,10 @@ services:
   demo-api:
     build: ./demo-api
     container_name: rtm-demo-api
+    restart: unless-stopped
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
     ports:
@@ -162,6 +193,7 @@ services:
   grafana:
     image: grafana/grafana:10.4.1
     container_name: rtm-grafana
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
@@ -185,8 +217,8 @@ services:
     profiles:
       - legacy
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     environment:
       PYTHONUNBUFFERED: 1
       KAFKA_BROKER: kafka:9092

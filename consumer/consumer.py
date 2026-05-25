@@ -107,6 +107,10 @@ def ensure_schema(conn):
         "ALTER TABLE metrics_anomalies ADD COLUMN IF NOT EXISTS baseline DOUBLE PRECISION;",
         "ALTER TABLE metrics_anomalies ADD COLUMN IF NOT EXISTS severity TEXT;",
         "ALTER TABLE metrics_anomalies ADD COLUMN IF NOT EXISTS scenario TEXT;",
+        "UPDATE metrics_raw SET time = to_timestamp(ts) WHERE time IS NULL AND ts IS NOT NULL;",
+        "UPDATE metrics_anomalies SET time = to_timestamp(ts) WHERE time IS NULL AND ts IS NOT NULL;",
+        "ALTER TABLE metrics_raw DROP CONSTRAINT IF EXISTS metrics_raw_pkey;",
+        "ALTER TABLE metrics_anomalies DROP CONSTRAINT IF EXISTS metrics_anomalies_pkey;",
     ]
     indexes = [
         "CREATE INDEX IF NOT EXISTS metrics_raw_host_time_idx ON metrics_raw (host, time DESC);",
@@ -114,10 +118,7 @@ def ensure_schema(conn):
         "CREATE INDEX IF NOT EXISTS metrics_anomalies_host_metric_time_idx ON metrics_anomalies (host, metric, time DESC);",
         "CREATE INDEX IF NOT EXISTS metrics_anomalies_scenario_time_idx ON metrics_anomalies (scenario, time DESC);",
     ]
-    hypertables = [
-        "SELECT create_hypertable('metrics_raw', 'time', if_not_exists => TRUE);",
-        "SELECT create_hypertable('metrics_anomalies', 'time', if_not_exists => TRUE);",
-    ]
+    hypertables = ("metrics_raw", "metrics_anomalies")
 
     with conn.cursor() as cur:
         for statement in table_statements:
@@ -127,15 +128,45 @@ def ensure_schema(conn):
         for index in indexes:
             cur.execute(index)
         if timescale_enabled:
-            for statement in hypertables:
-                try:
-                    cur.execute(statement)
-                except psycopg2.Error as e:
-                    print("Timescale hypertable migration skipped:", str(e))
-                    conn.rollback()
+            for table_name in hypertables:
+                ensure_hypertable(conn, cur, table_name)
 
     print("Ensured metric tables exist")
     return conn
+
+
+def ensure_hypertable(conn, cur, table_name):
+    try:
+        cur.execute(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM timescaledb_information.hypertables
+                WHERE hypertable_schema = current_schema()
+                  AND hypertable_name = %s
+            );
+            """,
+            (table_name,),
+        )
+        if cur.fetchone()[0]:
+            print(f"Timescale hypertable ready: {table_name}")
+            return
+
+        cur.execute(
+            """
+            SELECT create_hypertable(
+                %s::regclass,
+                'time',
+                if_not_exists => TRUE,
+                migrate_data => TRUE
+            );
+            """,
+            (table_name,),
+        )
+        print(f"Timescale hypertable created: {table_name}")
+    except psycopg2.Error as e:
+        print(f"Timescale hypertable migration failed for {table_name}:", str(e))
+        conn.rollback()
 
 
 def enable_timescale(conn):

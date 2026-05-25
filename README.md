@@ -44,7 +44,6 @@ Open:
 
 - Demo control panel: http://localhost:8000
 - Grafana: http://localhost:3000
-- Kafka UI: http://localhost:8080
 - Schema Registry: http://localhost:8081
 
 Grafana login:
@@ -94,6 +93,7 @@ Kafka topics:
 
 ```bash
 curl http://localhost:8000/api/health
+curl http://localhost:8000/api/summary
 curl http://localhost:8000/api/metrics/latest
 curl http://localhost:8000/api/anomalies/latest
 ```
@@ -148,6 +148,24 @@ Run config checks:
 docker compose config --quiet
 python3 -c 'import json; json.load(open("grafana/dashboards/rtm-dashboard.json"))'
 ```
+
+## Expected Containers
+
+Most services are long-running. Two setup containers are expected to exit successfully:
+
+- `rtm-kafka-init` creates the Kafka topics.
+- `rtm-schema-registrar` registers the checked-in event schemas.
+
+Optional developer tools run behind profiles so the default demo stays smaller:
+
+```bash
+docker compose --profile debug up -d kafka-ui
+docker compose --profile legacy up -d anomaly-detector
+```
+
+Open Kafka UI only when the debug profile is running:
+
+- Kafka UI: http://localhost:8080
 
 ## Legacy Detector
 
