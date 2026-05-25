@@ -93,10 +93,13 @@ Kafka topics:
 
 ```bash
 curl http://localhost:8000/api/health
+curl http://localhost:8000/api/pipeline/status
 curl http://localhost:8000/api/summary
 curl http://localhost:8000/api/metrics/latest
 curl http://localhost:8000/api/anomalies/latest
 ```
+
+`/api/pipeline/status` reports API, Kafka topic readiness, Schema Registry subjects, Flink processor health, Timescale hypertables, telemetry freshness, and Grafana health for the demo status strip.
 
 Create an incident:
 

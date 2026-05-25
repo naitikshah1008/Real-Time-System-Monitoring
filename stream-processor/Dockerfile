@@ -23,4 +23,6 @@ RUN chmod 0644 /opt/flink/lib/flink-sql-connector-kafka-3.2.0-1.19.jar \
 WORKDIR /app
 COPY anomaly.py processor.py ./
 
+EXPOSE 8090
+
 CMD ["python", "processor.py"]

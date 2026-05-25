@@ -43,6 +43,12 @@
         background: #14191c;
       }
 
+      .header-status {
+        display: grid;
+        gap: 8px;
+        justify-items: end;
+      }
+
       h1,
       h2,
       h3,
@@ -120,6 +126,63 @@
 
       .status.degraded .status-dot {
         background: var(--red);
+      }
+
+      .pipeline-strip {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 7px;
+        max-width: 840px;
+      }
+
+      .pipeline-item {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        column-gap: 7px;
+        row-gap: 2px;
+        align-items: center;
+        width: 132px;
+        min-height: 42px;
+        padding: 7px 9px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #12181b;
+      }
+
+      .pipeline-item .status-dot {
+        grid-row: 1 / span 2;
+      }
+
+      .pipeline-name {
+        overflow: hidden;
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.1;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .pipeline-detail {
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .pipeline-item.ok .status-dot {
+        background: var(--green);
+      }
+
+      .pipeline-item.degraded .status-dot {
+        background: var(--red);
+      }
+
+      .pipeline-item.unknown .status-dot {
+        background: var(--yellow);
       }
 
       .layout {
@@ -369,6 +432,19 @@
           padding: 16px;
         }
 
+        .header-status {
+          justify-items: stretch;
+          width: 100%;
+        }
+
+        .pipeline-strip {
+          justify-content: flex-start;
+        }
+
+        .pipeline-item {
+          width: calc(50% - 4px);
+        }
+
         main {
           padding: 14px;
         }
@@ -380,6 +456,10 @@
         .metric-strip {
           grid-template-columns: 1fr;
         }
+
+        .pipeline-item {
+          width: 100%;
+        }
       }
     </style>
   </head>
@@ -389,7 +469,10 @@
         <p class="eyebrow">RTM-AI</p>
         <h1>Live Observability Demo</h1>
       </div>
-      <div class="status" id="health"><span class="status-dot"></span><span>Checking</span></div>
+      <div class="header-status">
+        <div class="status" id="health"><span class="status-dot"></span><span>Checking</span></div>
+        <div class="pipeline-strip" id="pipeline-status"></div>
+      </div>
     </header>
 
     <main>
@@ -503,6 +586,7 @@
 
     <script>
       const health = document.querySelector("#health");
+      const pipelineStatus = document.querySelector("#pipeline-status");
       const lastAction = document.querySelector("#last-action");
       const currentHeadline = document.querySelector("#current-headline");
       const currentDetails = document.querySelector("#current-details");
@@ -531,6 +615,7 @@
         normal: "Normal",
         unknown: "Unknown",
       };
+      const pipelineOrder = ["api", "kafka", "schema_registry", "flink", "timescale", "telemetry", "grafana"];
 
       function escapeHtml(value) {
         return String(value ?? "").replace(/[&<>"']/g, (char) => {
@@ -591,11 +676,32 @@
         return response.json();
       }
 
-      async function loadHealth() {
-        const data = await fetchJson("/api/health");
+      function renderPipelineStatus(data) {
         health.classList.toggle("ok", data.status === "ok");
         health.classList.toggle("degraded", data.status !== "ok");
-        health.querySelector("span:last-child").textContent = data.status === "ok" ? "System OK" : "Degraded";
+        health.querySelector("span:last-child").textContent = data.status === "ok" ? "Pipeline OK" : "Pipeline Degraded";
+
+        const components = data.components || {};
+        pipelineStatus.innerHTML = pipelineOrder
+          .filter((key) => components[key])
+          .map((key) => {
+            const item = components[key];
+            const status = item.status || "unknown";
+            const statusClass = ["ok", "degraded", "unknown"].includes(status) ? status : "unknown";
+            const label = item.label || key;
+            const details = item.details || status;
+            return `<div class="pipeline-item ${statusClass}" title="${escapeHtml(details)}">
+              <span class="status-dot"></span>
+              <span class="pipeline-name">${escapeHtml(label)}</span>
+              <span class="pipeline-detail">${escapeHtml(details)}</span>
+            </div>`;
+          })
+          .join("");
+      }
+
+      async function loadHealth() {
+        const data = await fetchJson("/api/pipeline/status");
+        renderPipelineStatus(data);
       }
 
       function renderMetricCards(metric) {

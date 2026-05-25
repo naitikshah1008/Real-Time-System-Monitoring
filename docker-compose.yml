@@ -170,6 +170,9 @@ services:
       FLINK_GROUP_ID: rtm-flink-anomaly
       FLINK_PARALLELISM: 1
       FLINK_STARTING_OFFSET: latest
+      PROCESSOR_HEALTH_PORT: 8090
+    expose:
+      - "8090"
 
   demo-api:
     build: ./demo-api
@@ -189,6 +192,9 @@ services:
       PG_DB: rtm
       PG_USER: rtm
       PG_PASSWORD: rtm
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      FLINK_HEALTH_URL: http://stream-processor:8090/health
+      GRAFANA_URL: http://grafana:3000
 
   grafana:
     image: grafana/grafana:10.4.1

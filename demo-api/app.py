@@ -1,5 +1,9 @@
 import json
 import os
+from datetime import datetime
+from datetime import timezone
+from urllib.error import URLError
+from urllib.request import urlopen
 
 import psycopg2
 from fastapi import FastAPI, HTTPException
@@ -12,14 +16,30 @@ from psycopg2.extras import RealDictCursor
 from anomaly_explanations import enrich_anomalies
 from anomaly_explanations import summarize_current_metric
 from incident_commands import build_incident_command
+from pipeline_status import age_seconds
+from pipeline_status import component
+from pipeline_status import describe_age
+from pipeline_status import serialize_datetime
+from pipeline_status import status_rollup
 
 
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
 INCIDENT_TOPIC = os.getenv("INCIDENT_COMMANDS_TOPIC", "incident_commands")
+SCHEMA_REGISTRY_URL = os.getenv("SCHEMA_REGISTRY_URL", "http://schema-registry:8081")
+GRAFANA_URL = os.getenv("GRAFANA_URL", "http://grafana:3000")
+FLINK_HEALTH_URL = os.getenv("FLINK_HEALTH_URL", "http://stream-processor:8090/health")
+FRESH_METRIC_SECONDS = int(os.getenv("FRESH_METRIC_SECONDS", "60"))
 PG_HOST = os.getenv("PG_HOST", "postgres")
 PG_DB = os.getenv("PG_DB", "rtm")
 PG_USER = os.getenv("PG_USER", "rtm")
 PG_PASSWORD = os.getenv("PG_PASSWORD", "rtm")
+REQUIRED_TOPICS = ("metrics_raw", "metrics_anomalies", INCIDENT_TOPIC)
+REQUIRED_SUBJECTS = (
+    "metrics_raw-value",
+    "metrics_anomalies-value",
+    "incident_commands-value",
+)
+REQUIRED_HYPERTABLES = ("metrics_raw", "metrics_anomalies")
 
 app = FastAPI(title="RTM-AI Demo API")
 app.add_middleware(
@@ -67,6 +87,15 @@ def kafka_is_available():
         admin.close()
 
 
+def short_error(error):
+    return str(error).splitlines()[0][:160]
+
+
+def get_json_url(url, timeout=2):
+    with urlopen(url, timeout=timeout) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
 def query_rows(sql, params):
     try:
         with get_db_connection() as conn:
@@ -75,6 +104,144 @@ def query_rows(sql, params):
                 return [dict(row) for row in cur.fetchall()]
     except (psycopg2.errors.UndefinedColumn, psycopg2.errors.UndefinedTable):
         return []
+
+
+def check_api_component():
+    return component("API", "ok", "serving requests")
+
+
+def check_kafka_component():
+    admin = None
+    try:
+        admin = KafkaAdminClient(
+            bootstrap_servers=KAFKA_BROKER,
+            request_timeout_ms=5000,
+            api_version_auto_timeout_ms=10000,
+        )
+        topics = set(admin.list_topics())
+        topic_status = {topic: topic in topics for topic in REQUIRED_TOPICS}
+        missing = [topic for topic, exists in topic_status.items() if not exists]
+        status = "degraded" if missing else "ok"
+        details = "topics ready" if not missing else f"missing {', '.join(missing)}"
+        return component("Kafka", status, details, topics=topic_status)
+    except Exception as e:
+        return component("Kafka", "degraded", short_error(e), topics={})
+    finally:
+        if admin:
+            admin.close()
+
+
+def check_schema_registry_component():
+    try:
+        subjects = set(get_json_url(f"{SCHEMA_REGISTRY_URL.rstrip('/')}/subjects"))
+        subject_status = {subject: subject in subjects for subject in REQUIRED_SUBJECTS}
+        missing = [subject for subject, exists in subject_status.items() if not exists]
+        status = "degraded" if missing else "ok"
+        details = "schemas registered" if not missing else f"missing {len(missing)} schema subjects"
+        return component("Schema Registry", status, details, subjects=subject_status)
+    except (OSError, URLError, ValueError) as e:
+        return component("Schema Registry", "degraded", short_error(e), subjects={})
+
+
+def check_flink_component():
+    try:
+        data = get_json_url(FLINK_HEALTH_URL)
+        status = "ok" if data.get("status") == "ok" else "degraded"
+        details = data.get("job") or "health endpoint responded"
+        return component("Flink", status, details, processor=data)
+    except (OSError, URLError, ValueError) as e:
+        return component("Flink", "degraded", short_error(e), processor={})
+
+
+def check_grafana_component():
+    try:
+        data = get_json_url(f"{GRAFANA_URL.rstrip('/')}/api/health")
+        status = "ok" if data.get("database") == "ok" else "degraded"
+        details = f"Grafana {data.get('version', 'unknown')}"
+        return component("Grafana", status, details, grafana=data)
+    except (OSError, URLError, ValueError) as e:
+        return component("Grafana", "degraded", short_error(e), grafana={})
+
+
+def fetch_storage_status(now=None):
+    now = now or datetime.now(timezone.utc)
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT hypertable_name
+                FROM timescaledb_information.hypertables
+                WHERE hypertable_schema = current_schema()
+                """
+            )
+            hypertables = {row["hypertable_name"] for row in cur.fetchall()}
+
+            cur.execute(
+                """
+                SELECT COUNT(*) AS row_count, MAX(time) AS latest_at
+                FROM metrics_raw
+                WHERE event_id IS NOT NULL AND time IS NOT NULL
+                """
+            )
+            metrics = dict(cur.fetchone())
+
+            cur.execute(
+                """
+                SELECT COUNT(*) AS row_count, MAX(time) AS latest_at
+                FROM metrics_anomalies
+                WHERE event_id IS NOT NULL AND time IS NOT NULL
+                """
+            )
+            anomalies = dict(cur.fetchone())
+
+    latest_metric_at = metrics["latest_at"]
+    latest_anomaly_at = anomalies["latest_at"]
+    return {
+        "hypertables": {table: table in hypertables for table in REQUIRED_HYPERTABLES},
+        "metrics_rows": metrics["row_count"],
+        "anomaly_rows": anomalies["row_count"],
+        "latest_metric_at": serialize_datetime(latest_metric_at),
+        "latest_anomaly_at": serialize_datetime(latest_anomaly_at),
+        "latest_metric_age_seconds": age_seconds(latest_metric_at, now),
+        "latest_anomaly_age_seconds": age_seconds(latest_anomaly_at, now),
+    }
+
+
+def build_timescale_component(storage):
+    missing = [table for table, exists in storage["hypertables"].items() if not exists]
+    status = "degraded" if missing else "ok"
+    details = "hypertables ready" if not missing else f"missing hypertables: {', '.join(missing)}"
+    return component("TimescaleDB", status, details, storage=storage)
+
+
+def build_telemetry_component(storage):
+    metric_age = storage["latest_metric_age_seconds"]
+    if metric_age is None:
+        return component("Telemetry", "degraded", "no metric events stored", freshness=storage)
+    if metric_age > FRESH_METRIC_SECONDS:
+        return component(
+            "Telemetry",
+            "degraded",
+            f"latest metric {describe_age(metric_age)}",
+            freshness=storage,
+        )
+    anomaly_age = describe_age(storage["latest_anomaly_age_seconds"])
+    return component(
+        "Telemetry",
+        "ok",
+        f"latest metric {describe_age(metric_age)}; anomaly {anomaly_age}",
+        freshness=storage,
+    )
+
+
+def check_timescale_and_telemetry_components():
+    try:
+        storage = fetch_storage_status()
+        return build_timescale_component(storage), build_telemetry_component(storage)
+    except Exception as e:
+        degraded_storage = component("TimescaleDB", "degraded", short_error(e), storage={})
+        degraded_telemetry = component("Telemetry", "degraded", "storage unavailable", freshness={})
+        return degraded_storage, degraded_telemetry
 
 
 def fetch_latest_metrics(limit):
@@ -140,6 +307,25 @@ def health():
         "status": "ok" if postgres_ok and kafka_ok else "degraded",
         "postgres": postgres_ok,
         "kafka": kafka_ok,
+    }
+
+
+@app.get("/api/pipeline/status")
+def pipeline_status():
+    timescale_component, telemetry_component = check_timescale_and_telemetry_components()
+    components = {
+        "api": check_api_component(),
+        "kafka": check_kafka_component(),
+        "schema_registry": check_schema_registry_component(),
+        "flink": check_flink_component(),
+        "timescale": timescale_component,
+        "telemetry": telemetry_component,
+        "grafana": check_grafana_component(),
+    }
+    return {
+        "status": status_rollup(components),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "components": components,
     }
 
 

@@ -1,5 +1,8 @@
 import json
 import os
+import threading
+from http.server import BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer
 
 from anomaly import EWMADetector, TRACKED_METRICS
 from pyflink.common import Types
@@ -20,6 +23,7 @@ ANOMALY_TOPIC = os.getenv("METRICS_ANOMALY_TOPIC", "metrics_anomalies")
 GROUP_ID = os.getenv("FLINK_GROUP_ID", "rtm-flink-anomaly")
 PARALLELISM = int(os.getenv("FLINK_PARALLELISM", "1"))
 STARTING_OFFSET = os.getenv("FLINK_STARTING_OFFSET", "latest").lower()
+HEALTH_PORT = int(os.getenv("PROCESSOR_HEALTH_PORT", "8090"))
 REQUIRED_FIELDS = {"event_id", "host", "ts", *TRACKED_METRICS}
 
 
@@ -36,6 +40,43 @@ class AnomalyFlatMap(FlatMapFunction):
                 yield json.dumps(anomaly)
         except Exception as e:
             print("Failed to process metric event:", e, value)
+
+
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path not in ("/", "/health"):
+            self.send_response(404)
+            self.end_headers()
+            return
+
+        body = json.dumps(
+            {
+                "status": "ok",
+                "job": "rtm-ai-advanced-anomaly-processor",
+                "tracked_metrics": list(TRACKED_METRICS),
+            }
+        ).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format, *args):
+        return
+
+
+def start_health_server():
+    if HEALTH_PORT <= 0:
+        return
+
+    def serve():
+        server = ThreadingHTTPServer(("0.0.0.0", HEALTH_PORT), HealthHandler)
+        print(f"Processor health endpoint listening on {HEALTH_PORT}")
+        server.serve_forever()
+
+    thread = threading.Thread(target=serve, daemon=True)
+    thread.start()
 
 
 def starting_offsets():
@@ -72,6 +113,8 @@ def build_sink():
 
 
 def main():
+    start_health_server()
+
     env = StreamExecutionEnvironment.get_execution_environment()
     env.set_parallelism(PARALLELISM)
 
