@@ -33,20 +33,34 @@
       }
 
       header {
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
-        justify-content: space-between;
-        gap: 18px;
-        min-height: 76px;
-        padding: 16px 24px;
+        gap: 22px;
+        min-height: 118px;
+        padding: 24px 32px;
         border-bottom: 1px solid var(--border);
         background: #14191c;
       }
 
-      .header-status {
+      .header-copy {
         display: grid;
-        gap: 8px;
-        justify-items: end;
+        gap: 6px;
+        max-width: 760px;
+      }
+
+      .header-subtitle {
+        color: #b8c4ca;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        min-width: 0;
       }
 
       h1,
@@ -58,8 +72,8 @@
       }
 
       h1 {
-        font-size: 22px;
-        line-height: 1.2;
+        font-size: 34px;
+        line-height: 1.05;
       }
 
       h2 {
@@ -84,7 +98,7 @@
       main {
         width: min(1260px, 100%);
         margin: 0 auto;
-        padding: 22px;
+        padding: 20px 22px 22px;
       }
 
       .eyebrow {
@@ -109,6 +123,61 @@
         white-space: nowrap;
       }
 
+      .health-card {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        column-gap: 9px;
+        row-gap: 2px;
+        min-width: 220px;
+        min-height: 54px;
+        padding: 10px 12px;
+        white-space: normal;
+      }
+
+      .health-card .status-dot {
+        grid-row: 1 / span 2;
+        align-self: center;
+      }
+
+      .health-title {
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 750;
+        line-height: 1.2;
+      }
+
+      .health-detail {
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.25;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .header-link,
+      .secondary-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 8px 12px;
+        border: 1px solid #3b474e;
+        border-radius: 6px;
+        background: #182229;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+
+      .header-link:hover,
+      .secondary-button:hover {
+        background: #22313a;
+        text-decoration: none;
+      }
+
       .status-dot {
         width: 9px;
         height: 9px;
@@ -128,12 +197,45 @@
         background: var(--red);
       }
 
-      .pipeline-strip {
+      .pipeline-overview {
+        margin-bottom: 18px;
+      }
+
+      .pipeline-summary {
         display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        gap: 7px;
-        max-width: 840px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        min-height: 68px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .pipeline-summary-copy {
+        display: grid;
+        gap: 5px;
+        min-width: 0;
+      }
+
+      .pipeline-summary-text {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .pipeline-overview.collapsed .pipeline-summary {
+        border-bottom: 0;
+      }
+
+      .pipeline-overview.collapsed .pipeline-strip {
+        display: none;
+      }
+
+      .pipeline-strip {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+        padding: 14px 16px 16px;
       }
 
       .pipeline-item {
@@ -142,9 +244,9 @@
         column-gap: 7px;
         row-gap: 2px;
         align-items: center;
-        width: 132px;
-        min-height: 42px;
-        padding: 7px 9px;
+        align-content: center;
+        min-height: 66px;
+        padding: 9px 10px;
         border: 1px solid var(--border);
         border-radius: 6px;
         background: #12181b;
@@ -167,7 +269,7 @@
       .pipeline-name {
         overflow: hidden;
         color: var(--text);
-        font-size: 12px;
+        font-size: 12.5px;
         font-weight: 700;
         line-height: 1.1;
         text-overflow: ellipsis;
@@ -175,12 +277,11 @@
       }
 
       .pipeline-detail {
-        overflow: hidden;
+        overflow: visible;
         color: var(--muted);
-        font-size: 11px;
-        line-height: 1.15;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        font-size: 11.5px;
+        line-height: 1.25;
+        white-space: normal;
       }
 
       .pipeline-item.ok .status-dot {
@@ -594,6 +695,10 @@
           grid-template-columns: 1fr;
         }
 
+        .pipeline-strip {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
         .metric-strip {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -602,25 +707,32 @@
       @media (max-width: 640px) {
         header {
           align-items: flex-start;
-          flex-direction: column;
-          padding: 16px;
-        }
-
-        .header-status {
-          justify-items: stretch;
-          width: 100%;
-        }
-
-        .pipeline-strip {
-          justify-content: flex-start;
-        }
-
-        .pipeline-item {
-          width: calc(50% - 4px);
+          grid-template-columns: 1fr;
+          padding: 18px 16px;
         }
 
         main {
           padding: 14px;
+        }
+
+        h1 {
+          font-size: 28px;
+        }
+
+        .header-actions,
+        .pipeline-summary {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .header-link,
+        .health-card,
+        .secondary-button {
+          width: 100%;
+        }
+
+        .pipeline-strip {
+          grid-template-columns: 1fr;
         }
 
         .summary-headline {
@@ -631,25 +743,38 @@
           grid-template-columns: 1fr;
         }
 
-        .pipeline-item {
-          width: 100%;
-        }
       }
     </style>
   </head>
   <body>
     <header>
-      <div>
+      <div class="header-copy">
         <p class="eyebrow">RTM-AI</p>
         <h1>Live Observability Demo</h1>
+        <p class="header-subtitle">Simulated host telemetry flowing through Kafka, Flink, TimescaleDB, and Grafana.</p>
       </div>
-      <div class="header-status">
-        <div class="status" id="health"><span class="status-dot"></span><span>Checking</span></div>
-        <div class="pipeline-strip" id="pipeline-status"></div>
+      <div class="header-actions">
+        <div class="status health-card" id="health">
+          <span class="status-dot"></span>
+          <span class="health-title">Checking pipeline</span>
+          <span class="health-detail" id="health-detail">Connecting to services</span>
+        </div>
+        <a class="header-link" href="http://localhost:3000" target="_blank" rel="noreferrer">Open Grafana</a>
       </div>
     </header>
 
     <main>
+      <section class="panel pipeline-overview" id="pipeline-overview">
+        <div class="pipeline-summary">
+          <div class="pipeline-summary-copy">
+            <h2>Live Pipeline Health</h2>
+            <p class="pipeline-summary-text" id="pipeline-summary-text">Checking service connections...</p>
+          </div>
+          <button class="secondary-button" id="pipeline-toggle" type="button">Hide checks</button>
+        </div>
+        <div class="pipeline-strip" id="pipeline-status"></div>
+      </section>
+
       <div class="layout">
         <div class="sidebar">
           <aside class="panel">
@@ -712,13 +837,13 @@
 
           <section class="panel">
             <div class="panel-header">
-              <h2>Pipeline Inspector</h2>
+              <h2>Pipeline Details</h2>
               <span class="badge" id="pipeline-inspector-badge">Waiting</span>
             </div>
             <div class="panel-body">
               <div class="inspector-body">
-                <p class="inspector-title" id="pipeline-inspector-title">Select a pipeline component</p>
-                <p class="explanation-copy" id="pipeline-inspector-details">Component details will appear here as soon as status data loads.</p>
+                <p class="inspector-title" id="pipeline-inspector-title">Pipeline status details</p>
+                <p class="explanation-copy" id="pipeline-inspector-details">Status details will appear here as soon as data loads.</p>
                 <div class="detail-list" id="pipeline-inspector-facts"></div>
               </div>
             </div>
@@ -807,7 +932,11 @@
 
     <script>
       const health = document.querySelector("#health");
+      const healthDetail = document.querySelector("#health-detail");
+      const pipelineOverview = document.querySelector("#pipeline-overview");
       const pipelineStatus = document.querySelector("#pipeline-status");
+      const pipelineSummaryText = document.querySelector("#pipeline-summary-text");
+      const pipelineToggle = document.querySelector("#pipeline-toggle");
       const lastAction = document.querySelector("#last-action");
       const currentHeadline = document.querySelector("#current-headline");
       const currentDetails = document.querySelector("#current-details");
@@ -846,6 +975,23 @@
         normal: "Normal",
         unknown: "Unknown",
       };
+      const pipelineLabels = {
+        api: "Demo API",
+        kafka: "Event Stream",
+        schema_registry: "Event Schemas",
+        flink: "Anomaly Detector",
+        timescale: "Metrics Store",
+        telemetry: "Live Telemetry",
+        grafana: "Dashboards",
+      };
+      const pipelineDetails = {
+        api: "Incident controls ready",
+        kafka: "Event topics ready",
+        schema_registry: "Schemas registered",
+        flink: "Stream job running",
+        timescale: "Metric tables ready",
+        grafana: "Dashboard available",
+      };
       const pipelineOrder = ["api", "kafka", "schema_registry", "flink", "timescale", "telemetry", "grafana"];
       const activeIncidentStorageKey = "rtm-ai-active-incidents";
       let selectedDuration = 120;
@@ -853,6 +999,7 @@
       let activeIncidents = loadStoredIncidents();
       let latestPipelineStatus = null;
       let selectedPipelineKey = "telemetry";
+      let pipelineExpanded = true;
       let latestAnomalyRows = [];
       let selectedAnomalyEventId = null;
 
@@ -929,11 +1076,48 @@
         return response.json();
       }
 
+      function displayPipelineLabel(key, item) {
+        return pipelineLabels[key] || item.label || key;
+      }
+
+      function displayPipelineDetail(key, item) {
+        return pipelineDetails[key] || item.details || item.status || "Waiting";
+      }
+
+      function setPipelineExpanded(expanded) {
+        pipelineExpanded = expanded;
+        pipelineOverview.classList.toggle("collapsed", !pipelineExpanded);
+        pipelineToggle.textContent = pipelineExpanded ? "Hide checks" : "Show checks";
+      }
+
+      function updatePipelineSummary(data) {
+        const components = Object.values(data.components || {});
+        const total = components.length;
+        const healthy = components.filter((item) => item.status === "ok").length;
+        const degraded = total - healthy;
+        const isOk = data.status === "ok" && total > 0;
+
+        health.classList.toggle("ok", isOk);
+        health.classList.toggle("degraded", !isOk);
+        health.querySelector(".health-title").textContent = isOk ? "Everything is live" : "Needs attention";
+        healthDetail.textContent = total ? `${healthy}/${total} checks healthy` : "Connecting to services";
+
+        if (!total) {
+          pipelineSummaryText.textContent = "Waiting for pipeline status...";
+          return;
+        }
+
+        if (isOk) {
+          pipelineSummaryText.textContent = `${healthy}/${total} checks healthy. Metrics are flowing through the live demo stack.`;
+          return;
+        }
+
+        pipelineSummaryText.textContent = `${degraded} check${degraded === 1 ? "" : "s"} need attention.`;
+      }
+
       function renderPipelineStatus(data) {
         latestPipelineStatus = data;
-        health.classList.toggle("ok", data.status === "ok");
-        health.classList.toggle("degraded", data.status !== "ok");
-        health.querySelector("span:last-child").textContent = data.status === "ok" ? "Pipeline OK" : "Pipeline Degraded";
+        updatePipelineSummary(data);
 
         const components = data.components || {};
         pipelineStatus.innerHTML = pipelineOrder
@@ -943,9 +1127,9 @@
             const status = item.status || "unknown";
             const statusClass = ["ok", "degraded", "unknown"].includes(status) ? status : "unknown";
             const selectedClass = key === selectedPipelineKey ? " selected" : "";
-            const label = item.label || key;
-            const details = item.details || status;
-            return `<button type="button" class="pipeline-item ${statusClass}${selectedClass}" data-component="${escapeHtml(key)}" title="${escapeHtml(details)}">
+            const label = displayPipelineLabel(key, item);
+            const details = displayPipelineDetail(key, item);
+            return `<button type="button" class="pipeline-item ${statusClass}${selectedClass}" data-component="${escapeHtml(key)}" aria-pressed="${key === selectedPipelineKey}" title="${escapeHtml(item.details || details)}">
               <span class="status-dot"></span>
               <span class="pipeline-name">${escapeHtml(label)}</span>
               <span class="pipeline-detail">${escapeHtml(details)}</span>
@@ -989,8 +1173,8 @@
         if (!item) {
           pipelineInspectorBadge.textContent = "Waiting";
           pipelineInspectorBadge.className = "badge";
-          pipelineInspectorTitle.textContent = "Select a pipeline component";
-          pipelineInspectorDetails.textContent = "Component details will appear here as soon as status data loads.";
+          pipelineInspectorTitle.textContent = "Pipeline status details";
+          pipelineInspectorDetails.textContent = "Status details will appear here as soon as data loads.";
           pipelineInspectorFacts.innerHTML = "";
           return;
         }
@@ -998,8 +1182,8 @@
         const status = item.status || "unknown";
         pipelineInspectorBadge.textContent = status;
         pipelineInspectorBadge.className = `badge ${status === "ok" ? "normal" : "critical"}`;
-        pipelineInspectorTitle.textContent = item.label || "Pipeline Component";
-        pipelineInspectorDetails.textContent = item.details || "No details available.";
+        pipelineInspectorTitle.textContent = displayPipelineLabel(selectedPipelineKey, item);
+        pipelineInspectorDetails.textContent = item.details || displayPipelineDetail(selectedPipelineKey, item);
         const facts = componentFacts(selectedPipelineKey, item);
         pipelineInspectorFacts.innerHTML = facts
           .map(
@@ -1236,6 +1420,8 @@
 
       intensityInput.addEventListener("input", () => updateIntensity(intensityInput.value));
 
+      pipelineToggle.addEventListener("click", () => setPipelineExpanded(!pipelineExpanded));
+
       pipelineStatus.addEventListener("click", (event) => {
         const item = event.target.closest(".pipeline-item");
         if (!item) {
@@ -1256,6 +1442,7 @@
 
       updateDuration(selectedDuration);
       updateIntensity(selectedIntensity);
+      setPipelineExpanded(true);
       renderActiveIncidents();
       refresh();
       setInterval(refresh, 5000);
