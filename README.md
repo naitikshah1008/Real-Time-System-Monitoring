@@ -211,12 +211,6 @@ Open Kafka UI only when the debug profile is running:
 7. Run `scripts/smoke_check.sh --runtime`.
 8. Confirm Grafana panels load at http://localhost:3000.
 
-## Publishing
-
-The source repository can be published now. For a public live demo, expose only the demo UI/API and optionally a read-only Grafana dashboard. Keep Kafka, Zookeeper, Schema Registry, TimescaleDB/Postgres, Flink, and Kafka UI private.
-
-Deployment notes live in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
-
 ## Legacy Detector
 
 The original lightweight Python anomaly detector is kept as a fallback profile:

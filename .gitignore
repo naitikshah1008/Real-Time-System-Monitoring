@@ -55,6 +55,11 @@ log.txt
 
 # Local project analysis/status notes
 PROJECT_STATUS.md
+docs/DEPLOYMENT.md
+docs/ROADMAP.md
+docs/FUTURE*.md
+docs/*_PLAN.md
+docs/LOCAL_*.md
 
 # ===========================================
 # IDE / Editor Files
