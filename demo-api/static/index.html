@@ -95,6 +95,10 @@
         text-decoration: underline;
       }
 
+      [hidden] {
+        display: none !important;
+      }
+
       main {
         width: min(1260px, 100%);
         margin: 0 auto;
@@ -759,7 +763,7 @@
           <span class="health-title">Checking pipeline</span>
           <span class="health-detail" id="health-detail">Connecting to services</span>
         </div>
-        <a class="header-link" href="http://localhost:3000" target="_blank" rel="noreferrer">Open Grafana</a>
+        <a class="header-link" href="#" target="_blank" rel="noreferrer" data-grafana-link hidden>Open Grafana</a>
       </div>
     </header>
 
@@ -887,7 +891,7 @@
             <section class="panel">
               <div class="panel-header">
                 <h2>Latest Metrics</h2>
-                <a href="http://localhost:3000" target="_blank" rel="noreferrer">Grafana</a>
+                <a href="#" target="_blank" rel="noreferrer" data-grafana-link hidden>Grafana</a>
               </div>
               <div class="table-wrap">
                 <table>
@@ -960,6 +964,7 @@
       const pipelineInspectorTitle = document.querySelector("#pipeline-inspector-title");
       const pipelineInspectorDetails = document.querySelector("#pipeline-inspector-details");
       const pipelineInspectorFacts = document.querySelector("#pipeline-inspector-facts");
+      const grafanaLinks = document.querySelectorAll("[data-grafana-link]");
 
       const incidentLabels = {
         cpu_spike: "CPU Spike",
@@ -1074,6 +1079,27 @@
           throw new Error(`${response.status} ${response.statusText}`);
         }
         return response.json();
+      }
+
+      async function loadConfig() {
+        try {
+          const config = await fetchJson("/api/config");
+          const grafanaUrl = config.grafana_url;
+          grafanaLinks.forEach((link) => {
+            if (!grafanaUrl) {
+              link.hidden = true;
+              link.removeAttribute("href");
+              return;
+            }
+            link.hidden = false;
+            link.href = grafanaUrl;
+          });
+        } catch (error) {
+          grafanaLinks.forEach((link) => {
+            link.hidden = true;
+            link.removeAttribute("href");
+          });
+        }
       }
 
       function displayPipelineLabel(key, item) {
@@ -1444,6 +1470,7 @@
       updateIntensity(selectedIntensity);
       setPipelineExpanded(true);
       renderActiveIncidents();
+      loadConfig();
       refresh();
       setInterval(refresh, 5000);
       setInterval(renderActiveIncidents, 1000);

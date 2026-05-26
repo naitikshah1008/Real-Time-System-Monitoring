@@ -1,0 +1,4 @@
+{$DEMO_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy demo-api:8000
+}

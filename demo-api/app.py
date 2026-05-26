@@ -27,6 +27,7 @@ KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
 INCIDENT_TOPIC = os.getenv("INCIDENT_COMMANDS_TOPIC", "incident_commands")
 SCHEMA_REGISTRY_URL = os.getenv("SCHEMA_REGISTRY_URL", "http://schema-registry:8081")
 GRAFANA_URL = os.getenv("GRAFANA_URL", "http://grafana:3000")
+PUBLIC_GRAFANA_URL = os.getenv("PUBLIC_GRAFANA_URL", "http://localhost:3000").strip()
 FLINK_HEALTH_URL = os.getenv("FLINK_HEALTH_URL", "http://stream-processor:8090/health")
 FRESH_METRIC_SECONDS = int(os.getenv("FRESH_METRIC_SECONDS", "60"))
 PG_HOST = os.getenv("PG_HOST", "postgres")
@@ -326,6 +327,13 @@ def pipeline_status():
         "status": status_rollup(components),
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "components": components,
+    }
+
+
+@app.get("/api/config")
+def config():
+    return {
+        "grafana_url": PUBLIC_GRAFANA_URL or None,
     }
 
 

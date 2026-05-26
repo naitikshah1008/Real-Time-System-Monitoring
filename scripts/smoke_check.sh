@@ -7,6 +7,10 @@ cd "$ROOT_DIR"
 echo "Checking Docker Compose config..."
 docker compose config --quiet
 
+echo "Checking production Docker Compose config..."
+DEMO_DOMAIN="${DEMO_DOMAIN:-demo.example.com}" \
+  docker compose -f docker-compose.yml -f compose.production.yaml config --quiet
+
 echo "Checking Python syntax..."
 python3 -m py_compile \
   producer/producer.py \
@@ -63,6 +67,10 @@ if pipeline_status != "ok":
 summary = get_json("/api/summary")
 if "current" not in summary or "latest_anomalies" not in summary:
     raise SystemExit(f"/api/summary has unexpected shape: {summary}")
+
+config = get_json("/api/config")
+if "grafana_url" not in config:
+    raise SystemExit(f"/api/config has unexpected shape: {config}")
 
 print("Runtime smoke checks passed.")
 PY

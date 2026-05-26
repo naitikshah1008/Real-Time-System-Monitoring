@@ -1,0 +1,25 @@
+services:
+  caddy:
+    image: caddy:2.8
+    container_name: rtm-caddy
+    restart: unless-stopped
+    depends_on:
+      demo-api:
+        condition: service_started
+    environment:
+      DEMO_DOMAIN: ${DEMO_DOMAIN:?Set DEMO_DOMAIN before starting the production stack}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ops/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+  demo-api:
+    environment:
+      PUBLIC_GRAFANA_URL: ${PUBLIC_GRAFANA_URL:-}
+
+volumes:
+  caddy-data:
+  caddy-config:
