@@ -7,7 +7,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - "2181:2181"
+      - "${LOCAL_BIND_ADDRESS:-127.0.0.1}:${ZOOKEEPER_PORT:-2181}:2181"
 
   kafka:
     image: confluentinc/cp-kafka:7.7.0
@@ -16,13 +16,12 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092"      # inside Docker network
-      - "29092:29092"    # reachable from your host
+      - "${LOCAL_BIND_ADDRESS:-127.0.0.1}:${KAFKA_EXTERNAL_PORT:-29092}:29092"    # reachable from your host
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://${KAFKA_ADVERTISED_HOST:-localhost}:${KAFKA_EXTERNAL_PORT:-29092}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -60,7 +59,7 @@ services:
       schema-registry:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "${LOCAL_BIND_ADDRESS:-127.0.0.1}:${KAFKA_UI_PORT:-8080}:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
@@ -75,7 +74,7 @@ services:
       kafka:
         condition: service_healthy
     ports:
-      - "8081:8081"
+      - "${LOCAL_BIND_ADDRESS:-127.0.0.1}:${SCHEMA_REGISTRY_PORT:-8081}:8081"
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
@@ -105,16 +104,16 @@ services:
     restart: unless-stopped
     command: ["postgres", "-c", "shared_preload_libraries=timescaledb"]
     environment:
-      POSTGRES_USER: rtm
-      POSTGRES_PASSWORD: rtm
-      POSTGRES_DB: rtm
+      POSTGRES_USER: ${POSTGRES_USER:-rtm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rtm}
+      POSTGRES_DB: ${POSTGRES_DB:-rtm}
     ports:
-      - "5432:5432"
+      - "${LOCAL_BIND_ADDRESS:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - rtm-postgres-data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U rtm -d rtm"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -131,8 +130,8 @@ services:
       KAFKA_BROKER: kafka:9092
       METRICS_RAW_TOPIC: metrics_raw
       INCIDENT_COMMANDS_TOPIC: incident_commands
-      HOST_ID: demo-host-1
-      METRICS_SOURCE: simulator
+      HOST_ID: ${HOST_ID:-demo-host-1}
+      METRICS_SOURCE: ${METRICS_SOURCE:-simulator}
 
   consumer:
     build: ./consumer
@@ -149,9 +148,9 @@ services:
       METRICS_RAW_TOPIC: metrics_raw
       METRICS_ANOMALY_TOPIC: metrics_anomalies
       PG_HOST: postgres
-      PG_DB: rtm
-      PG_USER: rtm
-      PG_PASSWORD: rtm
+      PG_DB: ${POSTGRES_DB:-rtm}
+      PG_USER: ${POSTGRES_USER:-rtm}
+      PG_PASSWORD: ${POSTGRES_PASSWORD:-rtm}
 
   stream-processor:
     build: ./stream-processor
@@ -167,10 +166,10 @@ services:
       KAFKA_BROKER: kafka:9092
       METRICS_RAW_TOPIC: metrics_raw
       METRICS_ANOMALY_TOPIC: metrics_anomalies
-      FLINK_GROUP_ID: rtm-flink-anomaly
-      FLINK_PARALLELISM: 1
-      FLINK_STARTING_OFFSET: latest
-      PROCESSOR_HEALTH_PORT: 8090
+      FLINK_GROUP_ID: ${FLINK_GROUP_ID:-rtm-flink-anomaly}
+      FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
+      FLINK_STARTING_OFFSET: ${FLINK_STARTING_OFFSET:-latest}
+      PROCESSOR_HEALTH_PORT: ${PROCESSOR_HEALTH_PORT:-8090}
     expose:
       - "8090"
 
@@ -184,30 +183,31 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      - "${LOCAL_BIND_ADDRESS:-127.0.0.1}:${DEMO_API_PORT:-8000}:8000"
     environment:
       KAFKA_BROKER: kafka:9092
       INCIDENT_COMMANDS_TOPIC: incident_commands
       PG_HOST: postgres
-      PG_DB: rtm
-      PG_USER: rtm
-      PG_PASSWORD: rtm
+      PG_DB: ${POSTGRES_DB:-rtm}
+      PG_USER: ${POSTGRES_USER:-rtm}
+      PG_PASSWORD: ${POSTGRES_PASSWORD:-rtm}
       SCHEMA_REGISTRY_URL: http://schema-registry:8081
       FLINK_HEALTH_URL: http://stream-processor:8090/health
       GRAFANA_URL: http://grafana:3000
+      FRESH_METRIC_SECONDS: ${FRESH_METRIC_SECONDS:-60}
 
   grafana:
     image: grafana/grafana:10.4.1
     container_name: rtm-grafana
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${LOCAL_BIND_ADDRESS:-127.0.0.1}:${GRAFANA_PORT:-3000}:3000"
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-      POSTGRES_DB: rtm
-      POSTGRES_USER: rtm
-      POSTGRES_PASSWORD: rtm
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      POSTGRES_DB: ${POSTGRES_DB:-rtm}
+      POSTGRES_USER: ${POSTGRES_USER:-rtm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rtm}
     depends_on:
       postgres:
         condition: service_healthy

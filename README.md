@@ -34,6 +34,14 @@ Prerequisites:
 - Docker
 - Docker Compose
 
+Optional but recommended for a clean clone:
+
+```bash
+cp .env.example .env
+```
+
+For a shared or hosted environment, change the default passwords in `.env` before starting the stack.
+
 Start the advanced local stack:
 
 ```bash
@@ -162,6 +170,18 @@ docker compose config --quiet
 python3 -c 'import json; json.load(open("grafana/dashboards/rtm-dashboard.json"))'
 ```
 
+Run the repository smoke check:
+
+```bash
+scripts/smoke_check.sh
+```
+
+After the Docker stack is running, check live services:
+
+```bash
+scripts/smoke_check.sh --runtime
+```
+
 ## Expected Containers
 
 Most services are long-running. Two setup containers are expected to exit successfully:
@@ -179,6 +199,23 @@ docker compose --profile legacy up -d anomaly-detector
 Open Kafka UI only when the debug profile is running:
 
 - Kafka UI: http://localhost:8080
+
+## Clean Clone Checklist
+
+1. Clone the repository.
+2. Copy `.env.example` to `.env`.
+3. Change `POSTGRES_PASSWORD` and `GRAFANA_ADMIN_PASSWORD` if anyone else can access the machine.
+4. Run `docker compose up --build`.
+5. Wait for `rtm-kafka-init` and `rtm-schema-registrar` to exit successfully.
+6. Open http://localhost:8000 and trigger a short incident.
+7. Run `scripts/smoke_check.sh --runtime`.
+8. Confirm Grafana panels load at http://localhost:3000.
+
+## Publishing
+
+The source repository can be published now. For a public live demo, expose only the demo UI/API and optionally a read-only Grafana dashboard. Keep Kafka, Zookeeper, Schema Registry, TimescaleDB/Postgres, Flink, and Kafka UI private.
+
+Deployment notes live in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Legacy Detector
 
